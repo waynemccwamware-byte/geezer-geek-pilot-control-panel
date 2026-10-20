@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>GeezerGeek Pilot Apps</title>
+<meta name="theme-color" content="#10141a">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GG Pilot Apps">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #10141a;
+    --bg-panel: #1b222c;
+    --bezel: #2a323f;
+    --bezel-hi: #3a4454;
+    --amber: #f5a623;
+    --amber-dim: #7a5a1e;
+    --amber-glow: rgba(245, 166, 35, 0.35);
+    --text-primary: #e7e4dc;
+    --text-muted: #8b93a1;
+    --teal: #3fa7a0;
+    --focus: #f5a623;
+    /* launcher-specific: background for link tiles (not apps) */
+    --link-bg: #151a21;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg-deep: #10141a;
+      --bg-panel: #1b222c;
+      --bezel: #2a323f;
+      --bezel-hi: #3a4454;
+      --amber: #f5a623;
+      --amber-dim: #7a5a1e;
+      --text-primary: #e7e4dc;
+      --text-muted: #8b93a1;
+      --teal: #3fa7a0;
+      --link-bg: #151a21;
+    }
+  }
+
+  :root[data-theme="light"] {
+    --bg-deep: #eef0ee;
+    --bg-panel: #ffffff;
+    --bezel: #d3d6d2;
+    --bezel-hi: #b7bcb6;
+    --amber: #b5720b;
+    --amber-dim: #e8c48a;
+    --text-primary: #1b222c;
+    --text-muted: #55605e;
+    --teal: #1f7a72;
+    --link-bg: #e6e9e5;
+  }
+
+  * { box-sizing: border-box; }
+
+  html {
+    background: var(--bg-deep);
+    overscroll-behavior: none;
+    scroll-padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  body {
+    margin: 0;
+    min-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: radial-gradient(ellipse at 50% 0%, #171d26 0%, var(--bg-deep) 60%);
+    font-family: 'IBM Plex Sans', sans-serif;
+    color: var(--text-primary);
+    padding: 40px 24px 32px;
+    overscroll-behavior: none;
+  }
+
+  :root[data-theme="light"] html,
+  :root[data-theme="light"] body {
+    background: var(--bg-deep);
+  }
+
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+
+  .rig { width: 100%; max-width: 640px; }
+
+  .callsign-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 2px;
+    padding: 0 4px;
+  }
+
+  .callsign-row h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: 0.01em;
+  }
+
+  .title-link {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .title-link:hover, .title-link:visited, .title-link:active {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .callsign-row .ver {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .purpose-line {
+    font-size: 13px;
+    color: var(--teal);
+    margin: 6px 4px 24px;
+    line-height: 1.55;
+  }
+
+  .purpose-label { color: var(--text-primary); }
+
+  .panel {
+    margin-bottom: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  /* App groups (v1.6): each group has its own hue (--g), a faint card tint (--g-tint) and a small label */
+  .app-group { --g: var(--bezel-hi); --g-tint: transparent; }
+  .app-group.g-wx   { --g: #4d94f0;      --g-tint: rgba(77, 148, 240, 0.07); }
+  .app-group.g-atc  { --g: var(--amber); --g-tint: rgba(245, 166, 35, 0.06); }
+  .app-group.g-plan { --g: var(--teal);  --g-tint: rgba(63, 167, 160, 0.08); }
+  .app-group.g-safe { --g: #e2685c;      --g-tint: rgba(226, 104, 92, 0.07); }
+  .app-group.g-ref  { --g: var(--text-muted); }
+  :root[data-theme="light"] .app-group.g-wx { --g: #2f6fc4; }
+  :root[data-theme="light"] .app-group.g-safe { --g: #b8473c; }
+
+  .group-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 4px 9px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--g);
+  }
+  .group-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--bezel);
+  }
+
+  .app-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  @media (min-width: 620px) {
+    .app-row { grid-template-columns: 1fr 1fr; }
+    /* 3-card group on a 2-column grid: last card goes full width */
+    .app-row.row-3 > .app-cell:last-child { grid-column: 1 / -1; }
+    /* single-card group: card spans the row */
+    .app-row.row-1 { grid-template-columns: 1fr; }
+  }
+
+  @media (min-width: 940px) {
+    .rig { max-width: 960px; }
+    .app-row.row-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .app-row.row-3 > .app-cell:last-child { grid-column: auto; }
+  }
+
+  .app-cell {
+    padding: 15px 16px 13px;
+    background: linear-gradient(var(--g-tint, transparent), var(--g-tint, transparent)), var(--bg-panel);
+    border: 1px solid var(--bezel-hi);
+    border-radius: 8px;
+    box-shadow: inset 0 3px 0 var(--g, var(--bezel-hi)), 0 6px 16px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
+  }
+
+  .app-cell:hover {
+    border-color: var(--g, var(--teal));
+    box-shadow: inset 0 3px 0 var(--g, var(--bezel-hi)), 0 8px 20px rgba(0, 0, 0, 0.32);
+  }
+
+  .app-cell:active { transform: translateY(1px); }
+
+  .app-cell:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  .app-name {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .app-name a {
+    color: var(--text-primary);
+    text-decoration: none;
+    border-bottom: 1px solid var(--bezel-hi);
+  }
+
+  .app-name a:hover { color: var(--teal); border-bottom-color: var(--teal); }
+
+  .app-preview {
+    width: 75%;
+    max-width: 240px;
+    margin: 0 auto;
+    border-radius: 6px;
+    overflow: hidden;
+    display: block;
+  }
+
+  /* wide-format strips (Schedule, Clearance Delivery) need more width for their small text */
+  .app-preview.preview-strip { width: 95%; max-width: 310px; }
+
+  /* Link tiles (not apps): recessed background, dashed border, muted title */
+  .app-cell.is-link {
+    background: var(--link-bg);
+    border-style: dashed;
+    border-color: var(--bezel-hi);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
+  }
+
+  .app-cell.is-link .app-name { color: var(--text-muted); font-weight: 500; }
+
+  .app-cell.is-link:hover {
+    border-color: var(--teal);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
+  }
+
+  .app-cell.is-link:hover .app-name { color: var(--text-primary); }
+
+  .link-tag {
+    align-self: flex-start;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--text-muted);
+    border: 1px solid var(--bezel-hi);
+    border-radius: 4px;
+    padding: 1px 6px;
+    white-space: nowrap;
+  }
+
+  .app-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: 0;
+    flex-grow: 1;
+  }
+
+  .launch-btn {
+    align-self: flex-start;
+    margin-top: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: var(--bg-deep);
+    background: var(--amber);
+    border: none;
+    border-radius: 5px;
+    padding: 8px 16px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.05s ease;
+    display: inline-block;
+  }
+
+  .launch-btn:hover { filter: brightness(1.1); }
+  .launch-btn:active { transform: translateY(1px); }
+  .launch-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  .disclaimer {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    padding: 0 4px;
+    margin: 0 0 10px;
+  }
+
+  footer {
+    width: 100%;
+    padding: 0 4px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+  }
+
+  footer a {
+    color: var(--text-muted);
+    text-decoration: underline;
+    text-decoration-color: var(--bezel-hi);
+    text-underline-offset: 3px;
+  }
+
+  footer a:hover { color: var(--text-primary); }
+
+  .credit-line { display: flex; flex-wrap: wrap; gap: 4px; }
+
+  .share-btn {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--bezel-hi);
+    border-radius: 5px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+
+  .share-btn:hover { color: var(--text-primary); border-color: var(--teal); }
+
+  .footer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .install-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 100;
+  }
+
+  .install-overlay.open { display: flex; }
+
+  .install-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--bezel-hi);
+    border-radius: 10px;
+    max-width: 340px;
+    padding: 20px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  }
+
+  .install-card p {
+    margin: 0 0 16px;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-primary);
+  }
+
+  .install-close {
+    display: block;
+    margin-left: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--bg-deep);
+    background: var(--amber);
+    border: none;
+    border-radius: 5px;
+    padding: 7px 16px;
+    cursor: pointer;
+  }
+
+  .install-close:hover { filter: brightness(1.1); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .launch-btn { transition: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="rig">
+    <div class="callsign-row">
+      <h1><a class="title-link" href="qr.html" target="_blank" rel="noopener">GeezerGeek Pilot Apps</a></h1>
+      <span class="ver mono">v1.7</span>
+    </div>
+    <p class="purpose-line">Some people spend their retirement volunteering at a food bank or the Red Cross&hellip; I fly doctors to Mexico and coach fellow pilots.</p>
+
+    <div class="panel">
+      <section class="app-group g-wx" aria-labelledby="grp-wx">
+        <h2 class="group-label" id="grp-wx">Weather &amp; Avionics</h2>
+        <div class="app-row">
+          <a class="app-cell" href="https://weather-history-probability.netlify.app" aria-label="Open Weather History and Probability">
+            <h3 class="app-name">Weather History and Probability</h3>
+            <svg class="app-preview" viewBox="0 0 200 56" preserveAspectRatio="none" role="img" aria-label="Bar chart of monthly favorable-weather odds">
+              <rect width="200" height="56" fill="#0d1117"/>
+              <line x1="0" y1="26" x2="200" y2="26" stroke="#5b6472" stroke-width="1" stroke-dasharray="3,3"/>
+              <rect x="6"   y="10" width="14" height="42" fill="#3ecb86"/>
+              <rect x="26"  y="13" width="14" height="39" fill="#3ecb86"/>
+              <rect x="46"  y="12" width="14" height="40" fill="#3ecb86"/>
+              <rect x="66"  y="24" width="14" height="28" fill="#e2685c"/>
+              <rect x="86"  y="32" width="14" height="20" fill="#e2685c"/>
+              <rect x="106" y="30" width="14" height="22" fill="#e2685c"/>
+              <rect x="126" y="35" width="14" height="17" fill="#e2685c"/>
+              <rect x="146" y="14" width="14" height="38" fill="#3ecb86"/>
+              <rect x="166" y="6"  width="14" height="46" fill="#3ecb86"/>
+              <rect x="186" y="13" width="10" height="39" fill="#3ecb86"/>
+            </svg>
+            <p class="app-desc">Pulls historical NOAA weather for any U.S. airport and works out the odds of VFR, clear skies, or fog for whatever date range and time window you're planning around.</p>
+          </a>
+            <a class="app-cell" href="https://digital-autopilots-quiz.netlify.app/" aria-label="Open Know the Score(board)? – a Quiz">
+            <h3 class="app-name">Know the Score(board)? &ndash; a Quiz</h3>
+            <svg class="app-preview" viewBox="0 0 200 40" preserveAspectRatio="none" role="img" aria-label="Autopilot scoreboard reading GPS, HDG, AP, ALT, GP">
+              <rect width="200" height="40" fill="#6e6e6e"/>
+              <rect x="80" y="0" width="40" height="40" fill="#8a8a8a"/>
+              <line x1="40"  y1="0" x2="40"  y2="40" stroke="#4d4d4d" stroke-width="1"/>
+              <line x1="80"  y1="0" x2="80"  y2="40" stroke="#4d4d4d" stroke-width="1"/>
+              <line x1="120" y1="0" x2="120" y2="40" stroke="#4d4d4d" stroke-width="1"/>
+              <line x1="160" y1="0" x2="160" y2="40" stroke="#4d4d4d" stroke-width="1"/>
+              <text x="20"  y="25" font-family="monospace" font-weight="bold" font-size="13" fill="#f2f2f2" text-anchor="middle">GPS</text>
+              <text x="60"  y="25" font-family="monospace" font-weight="bold" font-size="13" fill="#35d07f" text-anchor="middle">HDG</text>
+              <text x="100" y="25" font-family="monospace" font-weight="bold" font-size="13" fill="#35d07f" text-anchor="middle">AP</text>
+              <text x="140" y="25" font-family="monospace" font-weight="bold" font-size="13" fill="#35d07f" text-anchor="middle">ALT</text>
+              <text x="180" y="25" font-family="monospace" font-weight="bold" font-size="13" fill="#f2f2f2" text-anchor="middle">GP</text>
+            </svg>
+            <p class="app-desc">Develops and exhibits a solid understanding of how the Command Line (aka Scoreboard) is the critical check on your navigation and autopilot settings.</p>
+          </a>
+          </div>
+      </section>
+
+      <section class="app-group g-atc" aria-labelledby="grp-atc">
+        <h2 class="group-label" id="grp-atc">ATC</h2>
+        <div class="app-row row-3">
+          <a class="app-cell" href="https://tec-route-lookup.netlify.app/" aria-label="Open TEC Route Lookup">
+            <h3 class="app-name">TEC Route Lookup</h3>
+            <svg class="app-preview" viewBox="0 0 200 56" preserveAspectRatio="none" role="img" aria-label="Sample TEC route card reading SBAQ24, HENER V186 DARTS V597 OCN">
+              <rect width="200" height="56" fill="#1b222c"/>
+              <rect x="0" y="0" width="3" height="56" fill="#f5a623"/>
+              <rect x="10" y="8" width="52" height="15" rx="4" fill="rgba(245,166,35,0.15)" stroke="#f5a623" stroke-width="1"/>
+              <text x="16" y="19" font-family="monospace" font-weight="bold" font-size="9" fill="#f5a623">SBAQ24</text>
+              <text x="70" y="19" font-family="sans-serif" font-size="8" fill="#8b93a1">option 5</text>
+              <text x="10" y="38" font-family="monospace" font-size="10.5" fill="#e7e4dc">HENER V186 DARTS&#8230;</text>
+              <rect x="10" y="44" width="80" height="9" rx="3" fill="#10141a"/>
+              <text x="14" y="51" font-family="sans-serif" font-size="6.5" fill="#8b93a1">Altitude/class: PQ90</text>
+            </svg>
+            <p class="app-desc">Looks up Tower Enroute Control routes straight from the FAA's own preferred-routes database &mdash; not simulator data &mdash; filtered by aircraft type and LAX's landing configuration.</p>
+          </a>
+            <a class="app-cell" href="https://clearance-delivery.netlify.app/" aria-label="Open Clearance Delivery Trainer">
+            <h3 class="app-name">Clearance Delivery Trainer</h3>
+            <svg class="app-preview preview-strip" viewBox="0 0 300 62" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Route strip: cleared to KPOC via KSBA, KWANG, CMA, VNY, Victor 186, PDZ, KPOC">
+              <rect width="300" height="62" fill="#1b222c"/>
+              <text x="12" y="13" font-family="monospace" font-size="8.5" font-weight="600" fill="#f5a623">CLEARED TO KPOC</text>
+              <text x="288" y="13" font-family="monospace" font-size="8.5" fill="#8b93a1" text-anchor="end" letter-spacing="2.5">C R A F T</text>
+              <line x1="18"  y1="34" x2="162" y2="34" stroke="#3a4454" stroke-width="2"/>
+              <line x1="162" y1="34" x2="236" y2="34" stroke="#3fa7a0" stroke-width="2"/>
+              <line x1="236" y1="34" x2="282" y2="34" stroke="#3a4454" stroke-width="2"/>
+              <text x="199" y="28" font-family="monospace" font-size="8" fill="#3fa7a0" text-anchor="middle">V186</text>
+              <circle cx="18"  cy="34" r="5" fill="#3fa7a0"/>
+              <path d="M66 28.5 L71 37 L61 37 Z" fill="#1b222c" stroke="#f5a623" stroke-width="1.5"/>
+              <polygon points="108.5,34 111.25,29.24 116.75,29.24 119.5,34 116.75,38.76 111.25,38.76" fill="#1b222c" stroke="#f5a623" stroke-width="1.5"/>
+              <circle cx="114" cy="34" r="1.2" fill="#f5a623"/>
+              <polygon points="156.5,34 159.25,29.24 164.75,29.24 167.5,34 164.75,38.76 159.25,38.76" fill="#1b222c" stroke="#f5a623" stroke-width="1.5"/>
+              <circle cx="162" cy="34" r="1.2" fill="#f5a623"/>
+              <polygon points="230.5,34 233.25,29.24 238.75,29.24 241.5,34 238.75,38.76 233.25,38.76" fill="#1b222c" stroke="#f5a623" stroke-width="1.5"/>
+              <circle cx="236" cy="34" r="1.2" fill="#f5a623"/>
+              <circle cx="282" cy="34" r="5" fill="#3fa7a0"/>
+              <text x="18"  y="52" font-family="monospace" font-size="8" fill="#8b93a1" text-anchor="middle">KSBA</text>
+              <text x="66"  y="52" font-family="monospace" font-size="8" fill="#8b93a1" text-anchor="middle">KWANG</text>
+              <text x="114" y="52" font-family="monospace" font-size="8" fill="#8b93a1" text-anchor="middle">CMA</text>
+              <text x="162" y="52" font-family="monospace" font-size="8" fill="#8b93a1" text-anchor="middle">VNY</text>
+              <text x="236" y="52" font-family="monospace" font-size="8" fill="#8b93a1" text-anchor="middle">PDZ</text>
+              <text x="282" y="52" font-family="monospace" font-size="8" fill="#8b93a1" text-anchor="middle">KPOC</text>
+            </svg>
+            <p class="app-desc">Call Clearance Delivery, hear your IFR clearance, copy it in CRAFT shorthand, then key Push to Talk and read it back &mdash; Clearance Delivery corrects anything you miss. Routes come from the FAA's preferred-route and TEC database plus recent real ATC clearances.</p>
+          </a>
+            <a class="app-cell" href="https://atc-chair-fly-trainer.netlify.app" aria-label="Open ATC Chair-Fly Trainer">
+            <h3 class="app-name">ATC Chair-Fly Trainer</h3>
+            <svg class="app-preview" viewBox="0 0 200 56" preserveAspectRatio="none" role="img" aria-label="HDG and ALT knobs with annunciator lights, from the chair-fly trainer panel">
+              <rect width="200" height="56" fill="#3a4454" stroke="#4d596b" stroke-width="1"/>
+              <rect x="80"  y="8" width="8" height="8" rx="2" fill="#10141a" stroke="#2a323f"/>
+              <rect x="92"  y="8" width="8" height="8" rx="2" fill="#10141a" stroke="#2a323f"/>
+              <rect x="104" y="8" width="8" height="8" rx="2" fill="#10141a" stroke="#2a323f"/>
+              <rect x="116" y="8" width="8" height="8" rx="2" fill="#10141a" stroke="#2a323f"/>
+              <circle cx="40"  cy="32" r="14" fill="#10141a" stroke="#f5a623" stroke-width="2.5"/>
+              <circle cx="160" cy="32" r="14" fill="#10141a" stroke="#f5a623" stroke-width="2.5"/>
+              <text x="40"  y="53" font-family="sans-serif" font-size="8" fill="#f5a623" text-anchor="middle">HDG</text>
+              <text x="160" y="53" font-family="sans-serif" font-size="8" fill="#f5a623" text-anchor="middle">ALT</text>
+            </svg>
+            <p class="app-desc">Fires a random ATC instruction at you and times whether you set it up and read it back correctly &mdash; chair-flying practice for the Listen, Set, Read Back habit.</p>
+          </a>
+          </div>
+      </section>
+
+      <section class="app-group g-plan" aria-labelledby="grp-plan">
+        <h2 class="group-label" id="grp-plan">Time &amp; Fuel Planning</h2>
+        <div class="app-row">
+          <a class="app-cell" href="https://days-flight-schedule.netlify.app/" aria-label="Open Day's Flight Schedule">
+            <h3 class="app-name">Day's Flight Schedule</h3>
+            <svg class="app-preview preview-strip" viewBox="-40 0 280 68" preserveAspectRatio="none" role="img" aria-label="Timeline of a flying day: depart home/hotel at KSBA wheels-up, stops at KSDM and MMSF, arrive home/hotel at MMLT, with calculated times above each">
+              <rect x="-40" width="280" height="68" fill="#1b222c"/>
+              <line x1="16" y1="28" x2="184" y2="28" stroke="#3a4454" stroke-width="2"/>
+              <circle cx="16"  cy="28" r="5" fill="#3fa7a0"/>
+              <circle cx="72"  cy="28" r="5" fill="#f5a623"/>
+              <circle cx="128" cy="28" r="5" fill="#f5a623"/>
+              <circle cx="184" cy="28" r="5" fill="#3fa7a0"/>
+              <text x="16"  y="16" font-family="monospace" font-size="9" fill="#f5a623" text-anchor="middle">07:00</text>
+              <text x="72"  y="16" font-family="monospace" font-size="9" fill="#f5a623" text-anchor="middle">09:35</text>
+              <text x="128" y="16" font-family="monospace" font-size="9" fill="#f5a623" text-anchor="middle">11:45</text>
+              <text x="184" y="16" font-family="monospace" font-size="9" fill="#f5a623" text-anchor="middle">16:45</text>
+              <text x="16"  y="44" font-family="sans-serif" font-size="8" fill="#8b93a1" text-anchor="middle">KSBA</text>
+              <text x="72"  y="44" font-family="sans-serif" font-size="8" fill="#8b93a1" text-anchor="middle">KSDM</text>
+              <text x="128" y="44" font-family="sans-serif" font-size="8" fill="#8b93a1" text-anchor="middle">MMSF</text>
+              <text x="184" y="44" font-family="sans-serif" font-size="8" fill="#8b93a1" text-anchor="middle">MMLT</text>
+              <text x="16" y="55" font-family="sans-serif" font-size="7" font-weight="700" fill="#8b93a1" text-anchor="end">depart</text>
+              <text x="16" y="64" font-family="sans-serif" font-size="7" font-weight="700" fill="#8b93a1" text-anchor="end">home/hotel</text>
+              <text x="184" y="55" font-family="sans-serif" font-size="7" font-weight="700" fill="#8b93a1" text-anchor="start">arrive</text>
+              <text x="184" y="64" font-family="sans-serif" font-size="7" font-weight="700" fill="#8b93a1" text-anchor="start">home/hotel</text>
+            </svg>
+            <p class="app-desc">Plans a flying day of up to five legs &mdash; enter wheels-up time plus each leg's airports, ETE, and fuel, and it works out every clock time from leaving home to arriving destination. Or let Claude pull ETE and fuel from ForeFlight; saved days sync across your devices.</p>
+          </a>
+            <a class="app-cell" href="https://fuel-to-add.netlify.app/" aria-label="Open How Much Fuel to Add?">
+            <h3 class="app-name">How Much Fuel to Add?</h3>
+            <svg class="app-preview" viewBox="0 0 200 56" preserveAspectRatio="none" role="img" aria-label="Equation: 42.0 minus 30.0 equals 12.0 gallons to add, split into 6.0 gallons left and 6.0 gallons right tank">
+              <rect width="200" height="56" fill="#1b222c"/>
+              <text x="100" y="27" font-family="monospace" font-size="14" text-anchor="middle">
+                <tspan fill="#3fa7a0">42.0</tspan><tspan fill="#8b93a1"> &#8722; </tspan><tspan fill="#3fa7a0">30.0</tspan><tspan fill="#8b93a1"> = </tspan><tspan fill="#f5a623" font-weight="700">12.0 gal</tspan>
+              </text>
+              <rect x="4"   y="36" width="92" height="16" rx="3" fill="#2a323f" stroke="#3a4454"/>
+              <text x="50"  y="47.5" font-family="monospace" font-size="9.5" fill="#8b93a1" text-anchor="middle">L&#8195;<tspan fill="#f5a623">6.0 gal</tspan></text>
+              <rect x="104" y="36" width="92" height="16" rx="3" fill="#2a323f" stroke="#3a4454"/>
+              <text x="150" y="47.5" font-family="monospace" font-size="9.5" fill="#8b93a1" text-anchor="middle">R&#8195;<tspan fill="#f5a623">6.0 gal</tspan></text>
+            </svg>
+            <p class="app-desc">Enter the fuel you'll have after the current leg and the minimum you need for the next &mdash; alternate and reserve included &mdash; and it works out how much to add, in gallons and liters, total and per side.</p>
+          </a>
+          </div>
+      </section>
+
+      <section class="app-group g-safe" aria-labelledby="grp-safe">
+        <h2 class="group-label" id="grp-safe">Safety Stats</h2>
+        <div class="app-row row-1">
+          <a class="app-cell" href="https://piston-ga-stats.netlify.app/" aria-label="Open Piston GA Stats">
+            <h3 class="app-name">Piston GA Stats</h3>
+            <svg class="app-preview" viewBox="0 0 200 56" preserveAspectRatio="none" role="img" aria-label="Type A versus Type B: accident-rate bars with 95% range whiskers, and a three-year trend line for each">
+              <rect width="200" height="56" fill="#1b222c"/>
+              <text x="8" y="10" font-family="monospace" font-size="6.5" fill="#8b93a1" letter-spacing="0.6">ACCIDENTS / 1,000 ACFT-YR</text>
+              <text x="8" y="27" font-family="monospace" font-size="8" font-weight="600" fill="#c4820f">TYPE A</text>
+              <rect x="42" y="20" width="50" height="9" rx="1.5" fill="#c4820f"/>
+              <line x1="86" y1="24.5" x2="102" y2="24.5" stroke="#e7e4dc" stroke-width="1"/>
+              <line x1="86" y1="21.5" x2="86" y2="27.5" stroke="#e7e4dc" stroke-width="1"/>
+              <line x1="102" y1="21.5" x2="102" y2="27.5" stroke="#e7e4dc" stroke-width="1"/>
+              <text x="8" y="45" font-family="monospace" font-size="8" font-weight="600" fill="#4d94f0">TYPE B</text>
+              <rect x="42" y="38" width="64" height="9" rx="1.5" fill="#4d94f0"/>
+              <line x1="99" y1="42.5" x2="116" y2="42.5" stroke="#e7e4dc" stroke-width="1"/>
+              <line x1="99" y1="39.5" x2="99" y2="45.5" stroke="#e7e4dc" stroke-width="1"/>
+              <line x1="116" y1="39.5" x2="116" y2="45.5" stroke="#e7e4dc" stroke-width="1"/>
+              <line x1="126" y1="6" x2="126" y2="50" stroke="#5b6472" stroke-width="1" stroke-dasharray="3,3"/>
+              <line x1="134" y1="49.5" x2="194" y2="49.5" stroke="#3a4454" stroke-width="1"/>
+              <polyline points="134,24 146,27 158,26 170,32 182,33 194,38" fill="none" stroke="#c4820f" stroke-width="1.8" stroke-linejoin="round"/>
+              <polyline points="134,14 146,15 158,20 170,19 182,24 194,27" fill="none" stroke="#4d94f0" stroke-width="1.8" stroke-linejoin="round"/>
+              <text x="194" y="10" font-family="monospace" font-size="6.5" fill="#8b93a1" text-anchor="end">3-YR TREND</text>
+            </svg>
+            <p class="app-desc">Helps the owner/pilot compare two piston airplane types &mdash; Cirrus, Diamond, Cessna, Piper, Beech, Mooney &mdash; using NTSB accident records back to 1982: rates per 1,000 registered aircraft-years, accident category, phase of flight, severity, top findings, and the latest probable causes.</p>
+          </a>
+          </div>
+      </section>
+
+      <section class="app-group g-ref" aria-labelledby="grp-ref">
+        <h2 class="group-label" id="grp-ref">Checklists &amp; Reference</h2>
+        <div class="app-row">
+          <a class="app-cell is-link" href="https://docs.google.com/forms/d/e/1FAIpQLSeC85xp_2sJYuEMtDPEHGM1Ufx0AhK6ar_kD09e34FjV92WuQ/viewform?usp=header" target="_blank" rel="noopener" aria-label="Open Flying Yourself to Mexico? checklist (Google Form, opens in a new window)">
+            <h3 class="app-name">Flying Yourself to Mexico?</h3>
+            <svg class="app-preview" viewBox="0 0 200 56" preserveAspectRatio="none" role="img" aria-label="Checklist: eAPIS filed and entry permit checked, pesos onboard not yet checked; KSBA to MMLT across the border">
+              <rect width="200" height="56" fill="#1b222c"/>
+              <rect x="8" y="6" width="10" height="10" rx="2" fill="#10141a" stroke="#3fa7a0"/>
+              <path d="M10 11 l2.5 2.5 l4 -5" stroke="#3fa7a0" stroke-width="1.8" fill="none"/>
+              <text x="24" y="14.5" font-family="monospace" font-size="8.5" fill="#e7e4dc">eAPIS filed</text>
+              <rect x="8" y="22" width="10" height="10" rx="2" fill="#10141a" stroke="#3fa7a0"/>
+              <path d="M10 27 l2.5 2.5 l4 -5" stroke="#3fa7a0" stroke-width="1.8" fill="none"/>
+              <text x="24" y="30.5" font-family="monospace" font-size="8.5" fill="#e7e4dc">Entry permit</text>
+              <rect x="8" y="38" width="10" height="10" rx="2" fill="#10141a" stroke="#f5a623"/>
+              <text x="24" y="46.5" font-family="monospace" font-size="8.5" fill="#8b93a1">Pesos onboard</text>
+              <line x1="152" y1="4" x2="152" y2="52" stroke="#5b6472" stroke-width="1" stroke-dasharray="3,3"/>
+              <text x="146" y="50" font-family="sans-serif" font-size="6.5" fill="#8b93a1" text-anchor="end">US</text>
+              <text x="158" y="50" font-family="sans-serif" font-size="6.5" fill="#8b93a1">MX</text>
+              <line x1="112" y1="24" x2="190" y2="24" stroke="#3a4454" stroke-width="2"/>
+              <circle cx="112" cy="24" r="4" fill="#3fa7a0"/>
+              <circle cx="190" cy="24" r="4" fill="#f5a623"/>
+              <text x="112" y="14" font-family="monospace" font-size="7.5" fill="#8b93a1" text-anchor="middle">KSBA</text>
+              <text x="188" y="14" font-family="monospace" font-size="7.5" fill="#8b93a1" text-anchor="middle">MMLT</text>
+            </svg>
+            <p class="app-desc">A checklist for flying your own plane across the border &mdash; subscriptions and permits, eAPIS and flight-plan filings, what goes in the binder, and what to have onboard. Make a copy and customize it for your trip.</p>
+            <span class="link-tag">Opens Google Form &#8599;</span>
+          </a>
+            <a class="app-cell is-link" href="https://docs.google.com/document/d/1chfDa3JBCjsGykGjwrAFwOqMAS7d3_dIY9ieROLCIyU/preview" target="_blank" rel="noopener" aria-label="Open GeezerGeek Coach Reference Materials (Google Doc, opens in a new window)">
+            <h3 class="app-name">GeezerGeek Coach Reference Materials</h3>
+            <svg class="app-preview" viewBox="0 0 200 56" preserveAspectRatio="none" role="img" aria-label="Three tabbed reference binders beside an open document page">
+              <rect width="200" height="56" fill="#1b222c"/>
+              <rect x="14" y="8"  width="14" height="42" rx="2" fill="#3fa7a0"/>
+              <rect x="31" y="12" width="14" height="38" rx="2" fill="#f5a623"/>
+              <rect x="48" y="6"  width="14" height="44" rx="2" fill="#4d94f0"/>
+              <rect x="16" y="16" width="10" height="3" fill="#10141a" opacity="0.5"/>
+              <rect x="33" y="20" width="10" height="3" fill="#10141a" opacity="0.5"/>
+              <rect x="50" y="14" width="10" height="3" fill="#10141a" opacity="0.5"/>
+              <line x1="8" y1="50.5" x2="70" y2="50.5" stroke="#3a4454" stroke-width="1.5"/>
+              <path d="M86 4 h84 l12 12 v36 h-96 z" fill="#10141a" stroke="#3a4454"/>
+              <path d="M170 4 v12 h12" fill="none" stroke="#3a4454"/>
+              <rect x="94" y="11" width="52" height="4" rx="1" fill="#f5a623"/>
+              <rect x="94" y="21" width="78" height="2.5" rx="1" fill="#5b6472"/>
+              <rect x="94" y="27" width="70" height="2.5" rx="1" fill="#5b6472"/>
+              <rect x="94" y="33" width="76" height="2.5" rx="1" fill="#5b6472"/>
+              <rect x="94" y="39" width="58" height="2.5" rx="1" fill="#5b6472"/>
+              <rect x="94" y="45" width="66" height="2.5" rx="1" fill="#5b6472"/>
+            </svg>
+            <p class="app-desc">The reference library behind the GeezerGeek Coach sessions &mdash; background reading and source material, collected in one Google Doc.</p>
+            <span class="link-tag">Opens Google Doc &#8599;</span>
+          </a>
+          </div>
+      </section>
+    </div>
+
+    <p class="disclaimer">Disclaimer: I am neither a ground instructor nor a flight instructor. All information is for general background and should be verified with a certified flight instructor and your own research.</p>
+
+    <footer>
+      <div class="credit-line">
+        <span>Wayne McClelland,</span>
+        <a href="https://youtube.com/@GeezerGeekPilot" target="_blank" rel="noopener">GeezerGeek Pilot</a>,
+        <a href="https://docs.google.com/document/d/1chfDa3JBCjsGykGjwrAFwOqMAS7d3_dIY9ieROLCIyU/preview" target="_blank" rel="noopener">Reference Materials</a>
+      </div>
+      <div class="footer-actions">
+        <button class="share-btn" id="shareBtn" type="button">Share this app with pilot friends</button>
+        <button class="share-btn" id="installBtn" type="button" style="display:none;">Add this app to Home Screen</button>
+      </div>
+    </footer>
+  </div>
+
+  <div class="install-overlay" id="installOverlay">
+    <div class="install-card">
+      <p id="installText"></p>
+      <button class="install-close" id="installClose" type="button">Got it</button>
+    </div>
+  </div>
+
+<script>
+  // Share button: App Conventions §6a (native share sheet, then clipboard, then mailto; a cancelled sheet is not an error)
+  (() => {
+    const APP_URL   = 'https://geezer-geek-pilot-control-panel.netlify.app/';   // canonical live URL from §1
+    const APP_TITLE = 'GeezerGeek Pilot Apps';
+    const APP_TEXT  = 'A launcher for GeezerGeek Pilot\'s aviation apps.';
+    const btn = document.getElementById('shareBtn');
+    if (!btn) return;
+    btn.addEventListener('click', async () => {
+      const label = btn.querySelector('span') || btn;
+      const original = label.textContent;
+      if (navigator.share){
+        try { await navigator.share({ title: APP_TITLE, text: APP_TEXT, url: APP_URL }); return; }
+        catch (err) { if (err && err.name === 'AbortError') return; /* else fall through */ }
+      }
+      try {
+        await navigator.clipboard.writeText(APP_URL);
+        label.textContent = 'Link copied to clipboard!';
+        setTimeout(() => { label.textContent = original; }, 2200);
+      } catch (err) {
+        window.location.href = 'mailto:?subject=' + encodeURIComponent(APP_TITLE)
+          + '&body=' + encodeURIComponent(APP_TEXT + ' ' + APP_URL);
+      }
+    });
+  })();
+
+  // --- Add to Home Screen ---
+  const installBtn = document.getElementById('installBtn');
+  const installOverlay = document.getElementById('installOverlay');
+  const installText = document.getElementById('installText');
+  const installClose = document.getElementById('installClose');
+  let deferredPrompt = null;
+
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true;
+
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua)
+    || (ua.includes('Macintosh') && navigator.maxTouchPoints > 1); // iPadOS desktop-mode UA
+  const isMac = /Macintosh/.test(ua) && !isIOS;
+  const isSafari = /^((?!chrome|android|crios|fxios|edg).)*safari/i.test(ua);
+
+  function showInstallOverlay(message) {
+    installText.textContent = message;
+    installOverlay.classList.add('open');
+  }
+
+  if (!isStandalone) {
+    installBtn.style.display = 'inline-block';
+  }
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'inline-block';
+  });
+
+  installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      return;
+    }
+    if (isIOS) {
+      showInstallOverlay('On your iPhone or iPad: tap the Share icon in Safari\u2019s toolbar, then choose \u201cAdd to Home Screen.\u201d');
+    } else if (isMac && isSafari) {
+      showInstallOverlay('On your Mac: in Safari\u2019s menu bar, choose File \u2192 Add to Dock. (Safari 17 or later required.)');
+    } else {
+      showInstallOverlay('Look for an install icon in your browser\u2019s address bar, or check your browser\u2019s menu for \u201cInstall App\u201d or \u201cAdd to Home Screen.\u201d');
+    }
+  });
+
+  installClose.addEventListener('click', () => installOverlay.classList.remove('open'));
+  installOverlay.addEventListener('click', (e) => {
+    if (e.target === installOverlay) installOverlay.classList.remove('open');
+  });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>
