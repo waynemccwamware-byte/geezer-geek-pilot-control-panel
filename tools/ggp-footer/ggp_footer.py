@@ -20,7 +20,7 @@ import re
 import sys
 from pathlib import Path
 
-VERSION = 'v1 · 20-Oct-2026'
+VERSION = 'v1.1 · 20-Oct-2026'
 
 CONTROL_PANEL_URL = 'https://geezer-geek-pilot-control-panel.netlify.app/'
 REFERENCE_URL = 'https://docs.google.com/document/d/1chfDa3JBCjsGykGjwrAFwOqMAS7d3_dIY9ieROLCIyU/preview'
@@ -42,7 +42,8 @@ INSTALL_ICON = ('<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke=
 # the apps keep counting silently in their own scripts). extras: app-specific links shown under the
 # back link. install: (button id, label) for an app that has its own install code.
 APPS = {
-    'geezer-geek-pilot-control-panel': dict(file='site/index.html', back=False, count=True,
+    # count_base: estimated opens before the Tally counter started (20-Oct-2026); added to the shown number.
+    'geezer-geek-pilot-control-panel': dict(file='site/index.html', back=False, count=True, count_base=300,
                                             install=('installBtn', 'Add this app to Home Screen')),
     'weather-history-probability': dict(file='site/index.html'),
     'digital-autopilots-quiz': dict(file='site/index.html'),
@@ -140,7 +141,8 @@ JS = f'''<!-- GGP-FOOTER-JS START {VERSION} · shared footer script, App Convent
     fetch('https://tally.yuki.sh/hits/wamware/geezer-geek-pilot-control-panel.json')
       .then(r => r.json())
       .then(d => {{
-        const n = d && d.visit;
+        const base = parseInt(countEl.dataset.base, 10) || 0;  // pre-Tally opens, App Conventions §6b
+        const n = d && typeof d.visit === 'number' ? d.visit + base : null;
         if (typeof n === 'number') countEl.textContent = 'Opened ' + n.toLocaleString() + (n === 1 ? ' time' : ' times');
       }})
       .catch(() => {{ /* counter is a nice-to-have, never block the app */ }});
@@ -160,7 +162,9 @@ def footer_html(cfg):
     lines.append(f'  <div class="ggp-credit">Wayne McClelland, <a href="{YOUTUBE_URL}" target="_blank" rel="noopener">GeezerGeek Pilot</a>, '
                  f'<a href="{REFERENCE_URL}" target="_blank" rel="noopener">Reference Materials</a></div>')
     if cfg.get('count'):
-        lines.append('  <div class="ggp-count" id="ggpCount"></div>')
+        base = cfg.get('count_base', 0)
+        attr = f' data-base="{base}"' if base else ''
+        lines.append(f'  <div class="ggp-count" id="ggpCount"{attr}></div>')
     lines.append('  <div class="ggp-actions">')
     lines.append(f'    <button class="ggp-pill ggp-share" type="button">{SHARE_ICON}<span>{SHARE_LABEL}</span></button>')
     if cfg.get('install'):
