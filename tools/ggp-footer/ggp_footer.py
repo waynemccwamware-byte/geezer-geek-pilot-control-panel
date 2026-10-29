@@ -20,11 +20,12 @@ import re
 import sys
 from pathlib import Path
 
-VERSION = 'v1.1 · 20-Oct-2026'
+VERSION = 'v1.2 · 29-Oct-2026'
 
 CONTROL_PANEL_URL = 'https://geezer-geek-pilot-control-panel.netlify.app/'
 REFERENCE_URL = 'https://docs.google.com/document/d/1chfDa3JBCjsGykGjwrAFwOqMAS7d3_dIY9ieROLCIyU/preview'
 YOUTUBE_URL = 'https://youtube.com/@GeezerGeekPilot'
+AIRPORTS_URL = CONTROL_PANEL_URL + 'airports/'   # Wayne's airports-visited map (v1.2)
 
 SHARE_LABEL = 'Share GeezerGeek Pilot Apps with pilot friends'
 SHARE_TITLE = 'GeezerGeek Pilot Apps'
@@ -41,6 +42,7 @@ INSTALL_ICON = ('<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke=
 # Per-app settings. back: show the back link. count: show the open counter (Control Panel only;
 # the apps keep counting silently in their own scripts). extras: app-specific links shown under the
 # back link. install: (button id, label) for an app that has its own install code.
+# repo: the repo folder, when the key is not the repo name (a second page in one repo).
 APPS = {
     # count_base: estimated opens before the Tally counter started (20-Oct-2026); added to the shown number.
     'geezer-geek-pilot-control-panel': dict(file='site/index.html', back=False, count=True, count_base=300,
@@ -56,6 +58,8 @@ APPS = {
     'fuel-to-add': dict(file='site/index.html'),
     'clearance-delivery': dict(file='site/index.html'),
     'piston-ga-stats': dict(file='site/index.html'),
+    'airports-visited': dict(repo='geezer-geek-pilot-control-panel', file='site/airports/index.html',
+                             credit_link=False),   # the page the credit links to
 }
 
 CSS = f'''<!-- GGP-FOOTER-CSS START {VERSION} · shared footer styles, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
@@ -159,7 +163,8 @@ def footer_html(cfg):
         lines.append(f'  <div class="ggp-back"><a href="{CONTROL_PANEL_URL}">&larr; Back to GeezerGeek Pilot Apps</a></div>')
     for text, url in cfg.get('extras', []):
         lines.append(f'  <div class="ggp-extra"><a href="{url}" target="_blank" rel="noopener">{text}</a></div>')
-    lines.append(f'  <div class="ggp-credit">Wayne McClelland, <a href="{YOUTUBE_URL}" target="_blank" rel="noopener">GeezerGeek Pilot</a>, '
+    name = f'<a href="{AIRPORTS_URL}" target="_blank" rel="noopener">Wayne McClelland</a>' if cfg.get('credit_link', True) else 'Wayne McClelland'
+    lines.append(f'  <div class="ggp-credit">{name}, <a href="{YOUTUBE_URL}" target="_blank" rel="noopener">GeezerGeek Pilot</a>, '
                  f'<a href="{REFERENCE_URL}" target="_blank" rel="noopener">Reference Materials</a></div>')
     if cfg.get('count'):
         base = cfg.get('count_base', 0)
@@ -195,7 +200,7 @@ def main(argv):
     check = '--check' in argv
     status = 0
     for app, cfg in APPS.items():
-        path = root / app / cfg['file']
+        path = root / cfg.get('repo', app) / cfg['file']
         if not path.exists():
             print(f'{app}: MISSING {path}')
             status = 1

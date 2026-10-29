@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Airports Visited</title>
+<meta name="theme-color" content="#10141a">
+<meta name="description" content="Every airport in Wayne McClelland's ForeFlight logbook, pinned by year of first visit.">
+<link rel="icon" href="../icons/icon-192.png" sizes="192x192" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* App Conventions §3a palette; map tokens below. Forked from Rosen Air Airports Visited v1.2. */
+:root{
+  --bg-deep:#10141a; --bg-panel:#1b222c; --bezel:#2a323f; --bezel-hi:#3a4454;
+  --amber:#f5a623; --amber-dim:#7a5a1e; --amber-glow:rgba(245,166,35,0.35);
+  --text-primary:#e7e4dc; --text-muted:#8b93a1; --teal:#3fa7a0; --focus:#f5a623; --alert:#e0705f;
+  /* app-specific: map */
+  --water:#0d1117; --land:#1f2731; --land2:#1a2029; --line:#46505f; --line2:#232b36; --halo:#10141a;
+  --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{background:var(--bg-deep);color-scheme:dark;overscroll-behavior:none;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100vh;overscroll-behavior:none;background:radial-gradient(ellipse at 50% 0%,#171d26 0%,var(--bg-deep) 60%);font-family:var(--sans);font-size:14px;color:var(--text-primary);padding:14px 12px 40px}
+.mono{font-family:var(--mono)}
+.rig{width:100%;max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.title-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:2px;padding:0 4px}
+.title-row h1{font-size:19px;font-weight:600;margin:0;letter-spacing:.01em}
+.title-row .ver{font-size:11px;color:var(--text-muted)}
+.purpose-line{font-size:12.5px;color:var(--teal);margin:-6px 4px 0;line-height:1.5}
+.purpose-label{color:var(--text-primary)}
+.stat{font-family:var(--mono);font-size:12px;color:var(--text-muted);padding:0 4px;font-variant-numeric:tabular-nums}
+.stat b{color:var(--amber);font-weight:600}
+.card{background:var(--bg-panel);border:1px solid var(--bezel-hi);border-radius:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 6px 16px rgba(0,0,0,.25)}
+.controls{display:flex;flex-direction:column;gap:10px;padding:10px 12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12px var(--mono);display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid var(--bezel-hi);border-radius:20px;background:var(--bezel);color:var(--text-primary);cursor:pointer;font-variant-numeric:tabular-nums}
+.chip i{width:10px;height:10px;border-radius:50%;background:var(--c);display:inline-block;border:1.5px solid var(--bg-deep)}
+.chip span{color:var(--text-muted)}
+.chip[aria-pressed="false"]{opacity:.45;background:transparent}
+.chip[aria-pressed="false"] i{background:transparent;border-color:var(--c)}
+.chip.all{color:var(--amber)}
+.chip:hover{border-color:var(--amber)}
+.chip:focus-visible,button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.time{display:flex;align-items:center;gap:10px;min-width:0}
+.time label{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);white-space:nowrap}
+.time input{flex:1;min-width:80px;accent-color:var(--amber)}
+.yr{font:600 16px var(--mono);color:var(--amber);font-variant-numeric:tabular-nums;width:3.2em}
+.btn{font:500 13px var(--sans);padding:8px 16px;border-radius:6px;border:1px solid var(--amber-dim);background:rgba(245,166,35,0.08);color:var(--amber);cursor:pointer;transition:color .15s ease,border-color .15s ease}
+.btn:hover{border-color:var(--amber)}
+.btn:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.mapbox{position:relative;background:var(--water);overflow:hidden;width:100%;height:clamp(340px,64vw,640px);touch-action:none;border-radius:10px}
+#map{position:absolute;inset:0;display:block;width:100%;height:100%}
+.state{fill:var(--land);stroke:var(--line)}
+.ctry{fill:var(--land2);stroke:var(--line)}
+.grat{fill:none;stroke:var(--line2)}
+.pin{stroke:var(--bg-deep);cursor:pointer}
+.pin.sel{stroke:var(--text-primary)}
+.pin.new{stroke:var(--text-primary)}
+.lbl{font-family:var(--mono);font-weight:500;fill:var(--text-primary);paint-order:stroke;stroke:var(--halo);stroke-linejoin:round;pointer-events:none}
+.views{position:absolute;left:10px;top:10px;display:flex;gap:4px}
+.views button{font:500 12px var(--mono);height:30px;padding:0 10px;border:1px solid var(--bezel-hi);background:var(--bezel);color:var(--text-muted);border-radius:5px;cursor:pointer}
+.views button[aria-pressed="true"]{color:var(--amber);border-color:var(--amber-dim)}
+.zoom{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:4px}
+.zoom button{width:34px;height:34px;font:500 17px var(--mono);border:1px solid var(--bezel-hi);background:var(--bezel);color:var(--amber);border-radius:5px;cursor:pointer}
+.zoom button:hover,.views button:hover{background:var(--bezel-hi)}
+.hint{position:absolute;right:10px;bottom:8px;font:500 11px var(--mono);color:var(--text-muted);background:rgba(16,20,26,.8);padding:3px 7px;border-radius:4px}
+.playyr{position:absolute;left:12px;bottom:6px;font:600 34px var(--mono);color:var(--amber);opacity:0;transition:opacity .2s;pointer-events:none;text-shadow:0 0 12px var(--bg-deep)}
+.playyr.on{opacity:.9}
+.panel{display:grid;grid-template-columns:auto 1fr;gap:3px 16px;border-left:4px solid var(--pc,var(--bezel-hi));padding:12px 16px;min-height:72px}
+.panel .id{font:600 24px var(--mono);color:var(--pc,var(--amber));grid-row:span 2;align-self:center;min-width:3.6em}
+.panel .nm{font-weight:600;font-size:15px;min-width:0}
+.panel .meta{color:var(--text-muted);font-size:13px;min-width:0}
+.panel .meta b{color:var(--text-primary);font-weight:600;white-space:nowrap}
+.panel.empty{display:block;color:var(--text-muted);font-size:13px}
+.fine{font-size:12px;color:var(--text-muted);line-height:1.55;margin:0;padding:0 4px}
+@media (max-width:520px){.hint{display:none}.panel .id{font-size:20px}.playyr{font-size:26px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<!-- GGP-FOOTER-CSS START --><!-- GGP-FOOTER-CSS END -->
+</head>
+<body>
+<div class="rig">
+  <div class="title-row">
+    <h1>Airports Visited</h1>
+    <span class="ver mono">v1.0</span>
+  </div>
+  <p class="purpose-line"><span class="purpose-label">Purpose:</span> Every airport in Wayne McClelland's ForeFlight logbook, __SPAN__, pinned by year of first visit. Filter by year, scrub or play the timeline, tap a pin for details.</p>
+  <div class="stat" id="stat"></div>
+  <div class="card controls">
+    <div class="chips" id="chips"></div>
+    <div class="time">
+      <label for="yr">Through</label>
+      <input type="range" id="yr" step="1">
+      <span class="yr" id="yrv"></span>
+      <button class="btn" id="play" type="button">Play</button>
+    </div>
+  </div>
+  <div class="card mapbox" id="mapbox">
+    <svg id="map" role="img" aria-label="Map of airports visited"></svg>
+    <div class="views"><button type="button" id="vAll" aria-pressed="true">All</button><button type="button" id="vWest" aria-pressed="false">West &amp; Baja</button></div>
+    <div class="zoom"><button id="zin" type="button" aria-label="Zoom in">+</button><button id="zout" type="button" aria-label="Zoom out">−</button><button id="zreset" type="button" aria-label="Reset view" style="font-size:14px">⟲</button></div>
+    <div class="playyr" id="playyr"></div>
+    <div class="hint">Scroll or pinch to zoom · IDs appear when zoomed in</div>
+  </div>
+  <div class="card panel empty" id="panel">Tap a pin for airport details.</div>
+  <p class="fine">Data: Wayne's ForeFlight logbook (departure, destination and airports in the Route field), simulator sessions left out; snapshot of __SNAP__. Names and coordinates from ForeFlight, or from the OurAirports database where ForeFlight's logbook lookup had none.</p>
+</div>
+<!-- GGP-FOOTER START --><!-- GGP-FOOTER END -->
+
+<script src="d3.min.js"></script>
+<script>
+// [id, name, city, region, country, lat, lon, first-visit year, flights] — no dates by design
+const AIR=__AIR__;
+const GEO=__GEO__;
+(() => {
+const panel=document.getElementById('panel');
+function showErr(err){panel.className='card panel empty';panel.textContent='Map error: '+(err&&err.message||err);console.error(err)}
+try{
+const air=AIR.map(a=>({id:a[0],name:a[1],city:a[2],rg:a[3],ctry:a[4],lat:a[5],lon:a[6],yr:a[7],n:a[8]}));
+const Y0=d3.min(air,a=>a.yr), Y1=d3.max(air,a=>a.yr), YEARS=d3.range(Y0,Y1+1);
+const ramp=d3.interpolateRgbBasis(['#6FA3F0','#45C893','#E8D04A','#F0A84A','#F07070']);
+const yc=y=>ramp(YEARS.length<2?1:(y-Y0)/(Y1-Y0));
+const on=new Set(YEARS);
+let through=Y1, sel=null, k=1, playing=false, westK=4;
+
+// year chips (click toggles; "All" resets)
+const chips=document.getElementById('chips');
+const allBtn=document.createElement('button');allBtn.type='button';allBtn.className='chip all';allBtn.textContent='All years';
+allBtn.onclick=()=>{const full=on.size===YEARS.length;YEARS.forEach(y=>full?on.delete(y):on.add(y));syncChips();render()};
+chips.appendChild(allBtn);
+const chipEls=YEARS.map(y=>{const n=air.filter(a=>a.yr===y).length;const b=document.createElement('button');b.type='button';b.className='chip';b.style.setProperty('--c',yc(y));
+  b.innerHTML=`<i></i>${y} <span>${n}</span>`;b.onclick=()=>{on.has(y)?on.delete(y):on.add(y);syncChips();render()};chips.appendChild(b);return [y,b]});
+function syncChips(){chipEls.forEach(([y,b])=>b.setAttribute('aria-pressed',on.has(y)));allBtn.textContent=on.size===YEARS.length?'Clear':'All years'}
+syncChips();
+
+const svg=d3.select('#map'), box=document.getElementById('mapbox');
+const g=svg.append('g');
+const geoF=x=>({type:'Feature',geometry:x.g,properties:{n:x.n}});
+const states=GEO.states.map(geoF), ctry=GEO.ctry.map(geoF);
+const proj=d3.geoConicConformal().parallels([15,50]).rotate([100,0]);
+const path=d3.geoPath(proj);
+const gLand=g.append('g'), gPins=g.append('g'), gLbl=g.append('g');
+let zRaf=0;
+function landStroke(){gLand.selectAll('.state,.ctry').style('stroke-width',.6/k);gLand.selectAll('.grat').style('stroke-width',.5/k)}
+const allPts={type:'MultiPoint',coordinates:air.map(a=>[a.lon,a.lat])};
+const westPts={type:'MultiPoint',coordinates:air.filter(a=>a.lon<-108&&a.lon>-125&&a.lat>22&&a.lat<42.5).map(a=>[a.lon,a.lat])};
+
+function layout(){
+  const W=box.clientWidth,H=box.clientHeight;svg.attr('viewBox',`0 0 ${W} ${H}`);
+  proj.fitExtent([[20,48],[W-54,H-20]],allPts);
+  gLand.selectAll('*').remove();
+  gLand.append('path').attr('class','grat').attr('d',path(d3.geoGraticule().step([10,10])()));
+  gLand.selectAll('.ctry').data(ctry).join('path').attr('class','ctry').attr('d',path);
+  gLand.selectAll('.state').data(states).join('path').attr('class','state').attr('d',path);
+  air.forEach(a=>{const p=proj([a.lon,a.lat]);a.x=p[0];a.y=p[1]});
+  westK=westScale();
+  landStroke();render();
+}
+const vis=a=>on.has(a.yr)&&a.yr<=through;
+function render(){
+  const list=air.filter(vis).sort((a,b)=>a.yr-b.yr), r=4.6*Math.pow(k,0.2)/k;
+  const isNew=a=>playing&&a.yr===through;
+  gPins.selectAll('circle').data(list,a=>a.id).join('circle')
+    .attr('class',a=>'pin'+(a===sel?' sel':'')+(isNew(a)?' new':''))
+    .attr('cx',a=>a.x).attr('cy',a=>a.y).attr('r',a=>a===sel?r*1.5:isNew(a)?r*1.6:r)
+    .style('fill',a=>yc(a.yr))
+    .attr('stroke-width',a=>(a===sel||isNew(a)?2.2:1)/k)
+    .on('click',(e,a)=>{e.stopPropagation();pick(a)});
+  gPins.selectAll('circle.new').raise();
+  const show=k>=westK*1.6;
+  gLbl.selectAll('text').data(show?list:[],a=>a.id).join('text').attr('class','lbl')
+    .attr('x',a=>a.x+r+2/k).attr('y',a=>a.y+4/k).attr('font-size',12/k).attr('stroke-width',3/k).text(a=>a.id);
+  const ctryN=new Set(list.map(a=>a.ctry)).size, stN=new Set(list.filter(a=>a.ctry==='United States').map(a=>a.rg)).size;
+  document.getElementById('stat').innerHTML=`<b>${list.length}</b> airports · <b>${stN}</b> US states · <b>${ctryN}</b> ${ctryN===1?'country':'countries'} · ${Y0}–${through}`;
+}
+function place(a){const parts=[a.city,/^[A-Za-z]/.test(a.rg)&&a.rg!==a.city?a.rg:'',a.ctry==='United States'?'':a.ctry].filter(Boolean);return parts.join(', ')}
+function pick(a){sel=a;panel.className='card panel';panel.style.setProperty('--pc',yc(a.yr));
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  panel.innerHTML=`<div class="id">${esc(a.id)}</div><div class="nm">${esc(a.name)}</div><div class="meta">${esc(place(a))}${place(a)?' · ':''}first visited <b>${a.yr}</b> · <b>${a.n}</b> ${a.n===1?'flight':'flights'}</div>`;render()}
+
+const zoom=d3.zoom().scaleExtent([1,60]).on('zoom',e=>{k=e.transform.k;g.attr('transform',e.transform);if(!zRaf)zRaf=requestAnimationFrame(()=>{zRaf=0;landStroke();render()})});
+svg.call(zoom);
+const vAll=document.getElementById('vAll'), vWest=document.getElementById('vWest');
+function westScale(){const W=box.clientWidth,H=box.clientHeight,[[x0,y0],[x1,y1]]=path.bounds(westPts);return Math.min(60,0.9/Math.max((x1-x0)/W,(y1-y0)/(H-40)))}
+function setView(which){vAll.setAttribute('aria-pressed',which==='all');vWest.setAttribute('aria-pressed',which==='west');
+  if(which==='all'){svg.transition().duration(400).call(zoom.transform,d3.zoomIdentity);return}
+  const W=box.clientWidth,H=box.clientHeight,[[x0,y0],[x1,y1]]=path.bounds(westPts);
+  const s=westScale();
+  svg.transition().duration(500).call(zoom.transform,d3.zoomIdentity.translate(W/2,H/2+14).scale(s).translate(-(x0+x1)/2,-(y0+y1)/2));
+}
+vAll.onclick=()=>setView('all'); vWest.onclick=()=>setView('west');
+document.getElementById('zin').onclick=()=>svg.transition().duration(250).call(zoom.scaleBy,2);
+document.getElementById('zout').onclick=()=>svg.transition().duration(250).call(zoom.scaleBy,.5);
+document.getElementById('zreset').onclick=()=>setView('all');
+
+const yr=document.getElementById('yr'),yrv=document.getElementById('yrv'),play=document.getElementById('play'),pyr=document.getElementById('playyr');
+yr.min=Y0;yr.max=Y1;yr.value=Y1;yrv.textContent=Y1;
+const setThrough=y=>{through=y;yr.value=y;yrv.textContent=y;pyr.textContent=y;render()};
+yr.oninput=()=>setThrough(+yr.value);
+let timer=null;
+function stop(){clearInterval(timer);timer=null;playing=false;play.textContent='Play';pyr.classList.remove('on');render()}
+play.onclick=()=>{if(timer){stop();return}
+  playing=true;play.textContent='Pause';pyr.classList.add('on');
+  setThrough(through>=Y1?Y0:through+1);
+  timer=setInterval(()=>{if(through>=Y1){stop();return}setThrough(through+1)},900)};
+
+let lastW=0,lastH=0,raf=0;
+function relayout(){raf=0;const W=box.clientWidth,H=box.clientHeight;if(!W||!H||(Math.abs(W-lastW)<2&&Math.abs(H-lastH)<2))return;lastW=W;lastH=H;
+  try{layout()}catch(err){showErr(err)}}
+if(window.ResizeObserver){new ResizeObserver(()=>{if(!raf)raf=requestAnimationFrame(relayout)}).observe(box)}else{window.addEventListener('resize',()=>{if(!raf)raf=requestAnimationFrame(relayout)})}
+relayout();
+}catch(err){showErr(err)}
+})();
+</script>
+<!-- GGP-FOOTER-JS START --><!-- GGP-FOOTER-JS END -->
+</body>
+</html>
