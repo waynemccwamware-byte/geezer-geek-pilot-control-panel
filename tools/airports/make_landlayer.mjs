@@ -1,0 +1,11 @@
+import fs from 'fs';
+import {feature} from 'topojson-client';
+const w=JSON.parse(fs.readFileSync('node_modules/world-atlas/land-110m.json'));
+const r=x=>Math.round(x*10)/10;
+const f=c=>typeof c[0]==='number'?[r(c[0]),r(c[1])]:c.map(f);
+const geo=JSON.parse(fs.readFileSync(process.argv[2]));
+const L=feature(w,w.objects.land);
+const feats=(L.type==='FeatureCollection'?L.features:[L]).map(x=>({n:'land',g:{type:x.geometry.type,coordinates:f(x.geometry.coordinates)}}));
+geo.land=feats;
+fs.writeFileSync(process.argv[2],JSON.stringify(geo));
+console.log('land features',feats.length,'bytes',fs.statSync(process.argv[2]).size);

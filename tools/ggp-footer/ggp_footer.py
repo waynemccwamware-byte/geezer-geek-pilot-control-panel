@@ -20,7 +20,7 @@ import re
 import sys
 from pathlib import Path
 
-VERSION = 'v1.2 · 29-Oct-2026'
+VERSION = 'v1.3 · 29-Oct-2026'
 
 CONTROL_PANEL_URL = 'https://geezer-geek-pilot-control-panel.netlify.app/'
 REFERENCE_URL = 'https://docs.google.com/document/d/1chfDa3JBCjsGykGjwrAFwOqMAS7d3_dIY9ieROLCIyU/preview'
@@ -163,7 +163,9 @@ def footer_html(cfg):
         lines.append(f'  <div class="ggp-back"><a href="{CONTROL_PANEL_URL}">&larr; Back to GeezerGeek Pilot Apps</a></div>')
     for text, url in cfg.get('extras', []):
         lines.append(f'  <div class="ggp-extra"><a href="{url}" target="_blank" rel="noopener">{text}</a></div>')
-    name = f'<a href="{AIRPORTS_URL}" target="_blank" rel="noopener">Wayne McClelland</a>' if cfg.get('credit_link', True) else 'Wayne McClelland'
+    # v1.3: only "airports visited" is the link (Wayne, 29-Oct-2026)
+    name = (f'Wayne McClelland (<a href="{AIRPORTS_URL}" target="_blank" rel="noopener">airports visited</a>)'
+            if cfg.get('credit_link', True) else 'Wayne McClelland')
     lines.append(f'  <div class="ggp-credit">{name}, <a href="{YOUTUBE_URL}" target="_blank" rel="noopener">GeezerGeek Pilot</a>, '
                  f'<a href="{REFERENCE_URL}" target="_blank" rel="noopener">Reference Materials</a></div>')
     if cfg.get('count'):

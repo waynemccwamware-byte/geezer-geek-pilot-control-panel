@@ -18,7 +18,7 @@
   --amber:#f5a623; --amber-dim:#7a5a1e; --amber-glow:rgba(245,166,35,0.35);
   --text-primary:#e7e4dc; --text-muted:#8b93a1; --teal:#3fa7a0; --focus:#f5a623; --alert:#e0705f;
   /* app-specific: map */
-  --water:#0d1117; --land:#1f2731; --land2:#1a2029; --line:#46505f; --line2:#232b36; --halo:#10141a;
+  --water:#0d1117; --space:#07090c; --sea:#0f1722; --land:#1f2731; --land2:#1a2029; --line:#46505f; --line2:#232b36; --halo:#10141a;
   --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
@@ -58,6 +58,10 @@ body{margin:0;min-height:100vh;overscroll-behavior:none;background:radial-gradie
 .state{fill:var(--land);stroke:var(--line)}
 .ctry{fill:var(--land2);stroke:var(--line)}
 .grat{fill:none;stroke:var(--line2)}
+.sphere{fill:var(--sea);stroke:var(--line)}
+.land{fill:var(--land2);stroke:none}
+.mapbox.globe{background:var(--space)}
+.views .sep{margin-left:6px}
 .pin{stroke:var(--bg-deep);cursor:pointer}
 .pin.sel{stroke:var(--text-primary)}
 .pin.new{stroke:var(--text-primary)}
@@ -87,7 +91,7 @@ body{margin:0;min-height:100vh;overscroll-behavior:none;background:radial-gradie
 <div class="rig">
   <div class="title-row">
     <h1>Airports Visited</h1>
-    <span class="ver mono">v1.1</span>
+    <span class="ver mono">v1.2</span>
   </div>
   <p class="purpose-line"><span class="purpose-label">Purpose:</span> Every airport in Wayne McClelland's ForeFlight logbook, __SPAN__, pinned by year of first visit. Filter by year, scrub or play the timeline, tap a pin for details.</p>
   <div class="stat" id="stat"></div>
@@ -102,10 +106,10 @@ body{margin:0;min-height:100vh;overscroll-behavior:none;background:radial-gradie
   </div>
   <div class="card mapbox" id="mapbox">
     <svg id="map" role="img" aria-label="Map of airports visited"></svg>
-    <div class="views"><button type="button" id="vAll" aria-pressed="true">All</button><button type="button" id="vWest" aria-pressed="false">West &amp; Baja</button></div>
+    <div class="views"><button type="button" id="vAll" aria-pressed="true">All</button><button type="button" id="vWest" aria-pressed="false">West &amp; Baja</button><button type="button" class="sep" id="vGlobe" aria-pressed="false">Globe</button></div>
     <div class="zoom"><button id="zin" type="button" aria-label="Zoom in">+</button><button id="zout" type="button" aria-label="Zoom out">−</button><button id="zreset" type="button" aria-label="Reset view" style="font-size:14px">⟲</button></div>
     <div class="playyr" id="playyr"></div>
-    <div class="hint">Scroll or pinch to zoom · IDs appear when zoomed in</div>
+    <div class="hint" id="hint">Scroll or pinch to zoom · IDs appear when zoomed in</div>
   </div>
   <div class="card panel empty" id="panel">Tap a pin for airport details.</div>
   <p class="fine">Data: Wayne's ForeFlight logbook (departure, destination and airports in the Route field), simulator sessions left out; snapshot of __SNAP__. Names and coordinates from ForeFlight, or from the OurAirports database where ForeFlight's logbook lookup had none.</p>
@@ -141,7 +145,14 @@ syncChips();
 const svg=d3.select('#map'), box=document.getElementById('mapbox');
 const g=svg.append('g');
 const geoF=x=>({type:'Feature',geometry:x.g,properties:{n:x.n}});
-const states=GEO.states.map(geoF), ctry=GEO.ctry.map(geoF);
+const states=GEO.states.map(geoF), ctry=GEO.ctry.map(geoF), land=(GEO.land||[]).map(geoF);
+// lighter country outlines for the globe while it is moving (every 4th point)
+function decimate(g){const ring=r=>{if(r.length<16)return r;const o=r.filter((p,i)=>i%4===0);o.push(r[r.length-1]);return o.length>=4?o:r};
+  return {type:g.type,coordinates:g.type==='Polygon'?g.coordinates.map(ring):g.coordinates.map(p=>p.map(ring))}}
+const lite=ctry.map(f=>({type:'Feature',properties:f.properties,geometry:decimate(f.geometry)}));
+let mode='flat', gbase=1, gWestK=6;
+const gproj=d3.geoOrthographic().clipAngle(90).precision(0.6).rotate([100,-30]), gpath=d3.geoPath(gproj);
+const G_HOME=[100,-30], G_WEST=[116.5,-32];
 const proj=d3.geoConicConformal().parallels([15,50]).rotate([100,0]);
 const path=d3.geoPath(proj);
 const gLand=g.append('g'), gPins=g.append('g'), gLbl=g.append('g');
@@ -152,6 +163,7 @@ const westPts={type:'MultiPoint',coordinates:air.filter(a=>a.lon<-108&&a.lon>-12
 
 function layout(){
   const W=box.clientWidth,H=box.clientHeight;svg.attr('viewBox',`0 0 ${W} ${H}`);
+  if(mode==='globe'){layoutGlobe(W,H);return}
   proj.fitExtent([[20,48],[W-54,H-20]],allPts);
   gLand.selectAll('*').remove();
   gLand.append('path').attr('class','grat').attr('d',path(d3.geoGraticule().step([10,10])()));
@@ -161,22 +173,44 @@ function layout(){
   westK=westScale();
   landStroke();render();
 }
+function westGlobeScale(W,H){return d3.geoOrthographic().clipAngle(90).rotate(G_WEST).fitExtent([[20,48],[W-20,H-20]],westPts).scale()}
+function layoutGlobe(W,H){
+  const prev=gbase; gbase=Math.max(60,Math.min(W,H)/2-14);
+  gproj.translate([W/2,H/2]).scale(gproj.scale()*(gbase/prev)||gbase);
+  if(prev===1) gproj.scale(gbase);
+  gWestK=westGlobeScale(W,H)/gbase;
+  drawGlobe(false);
+}
+function drawGlobe(moving){
+  gLand.selectAll('*').remove();
+  gLand.append('path').attr('class','sphere').attr('d',gpath({type:'Sphere'})).style('stroke-width',.6);
+  gLand.append('path').attr('class','grat').attr('d',gpath(d3.geoGraticule().step([15,15])())).style('stroke-width',.5);
+  gLand.append('g').selectAll('path').data(land).join('path').attr('class','land').attr('d',gpath);
+  gLand.append('g').selectAll('path').data(moving?lite:ctry).join('path').attr('class','ctry').attr('d',gpath).style('stroke-width',.6);
+  if(!moving) gLand.append('g').selectAll('path').data(states).join('path').attr('class','state').attr('d',gpath).style('stroke-width',.5);
+  k=gproj.scale()/gbase;
+  const r0=gproj.rotate(), c=[-r0[0],-r0[1]];
+  air.forEach(a=>{const p=gproj([a.lon,a.lat]);a.gx=p[0];a.gy=p[1];a.front=d3.geoDistance([a.lon,a.lat],c)<Math.PI/2-0.02});
+  render();
+}
 const vis=a=>on.has(a.yr)&&a.yr<=through;
 function render(){
-  const list=air.filter(vis).sort((a,b)=>a.yr-b.yr), r=4.6*Math.pow(k,0.2)/k;
+  const globe=mode==='globe', div=globe?1:k;
+  const all=air.filter(vis), list=all.filter(a=>!globe||a.front).sort((a,b)=>a.yr-b.yr), r=4.6*Math.pow(k,0.2)/div;
+  const X=a=>globe?a.gx:a.x, Y=a=>globe?a.gy:a.y;
   const isNew=a=>playing&&a.yr===through;
   gPins.selectAll('circle').data(list,a=>a.id).join('circle')
     .attr('class',a=>'pin'+(a===sel?' sel':'')+(isNew(a)?' new':''))
-    .attr('cx',a=>a.x).attr('cy',a=>a.y).attr('r',a=>a===sel?r*1.5:isNew(a)?r*1.6:r)
+    .attr('cx',X).attr('cy',Y).attr('r',a=>a===sel?r*1.5:isNew(a)?r*1.6:r)
     .style('fill',a=>yc(a.yr))
-    .attr('stroke-width',a=>(a===sel||isNew(a)?2.2:1)/k)
+    .attr('stroke-width',a=>(a===sel||isNew(a)?2.2:1)/div)
     .on('click',(e,a)=>{e.stopPropagation();pick(a)});
   gPins.selectAll('circle.new').raise();
-  const show=k>=westK*1.6;
+  const show=k>=(globe?gWestK:westK)*1.6;
   gLbl.selectAll('text').data(show?list:[],a=>a.id).join('text').attr('class','lbl')
-    .attr('x',a=>a.x+r+2/k).attr('y',a=>a.y+4/k).attr('font-size',12/k).attr('stroke-width',3/k).text(a=>a.id);
-  const ctryN=new Set(list.map(a=>a.ctry)).size, stN=new Set(list.filter(a=>a.ctry==='United States').map(a=>a.rg)).size;
-  document.getElementById('stat').innerHTML=`<b>${list.length}</b> airports · <b>${stN}</b> US states · <b>${ctryN}</b> ${ctryN===1?'country':'countries'} · ${Y0}–${through}`;
+    .attr('x',a=>X(a)+r+2/div).attr('y',a=>Y(a)+4/div).attr('font-size',12/div).attr('stroke-width',3/div).text(a=>a.id);
+  const ctryN=new Set(all.map(a=>a.ctry)).size, stN=new Set(all.filter(a=>a.ctry==='United States').map(a=>a.rg)).size;
+  document.getElementById('stat').innerHTML=`<b>${all.length}</b> airports · <b>${stN}</b> US states · <b>${ctryN}</b> ${ctryN===1?'country':'countries'} · ${Y0}–${through}`;
 }
 function place(a){const parts=[a.city,/^[A-Za-z]/.test(a.rg)&&a.rg!==a.city?a.rg:'',a.ctry==='United States'?'':a.ctry].filter(Boolean);return parts.join(', ')}
 function pick(a){sel=a;panel.className='card panel';panel.style.setProperty('--pc',yc(a.yr));
@@ -188,14 +222,48 @@ svg.call(zoom);
 const vAll=document.getElementById('vAll'), vWest=document.getElementById('vWest');
 function westScale(){const W=box.clientWidth,H=box.clientHeight,[[x0,y0],[x1,y1]]=path.bounds(westPts);return Math.min(60,0.9/Math.max((x1-x0)/W,(y1-y0)/(H-40)))}
 function setView(which){vAll.setAttribute('aria-pressed',which==='all');vWest.setAttribute('aria-pressed',which==='west');
+  if(mode==='globe'){const W=box.clientWidth,H=box.clientHeight;
+    which==='all'?gAnimate(G_HOME,gbase):gAnimate(G_WEST,westGlobeScale(W,H));return}
   if(which==='all'){svg.transition().duration(400).call(zoom.transform,d3.zoomIdentity);return}
   const W=box.clientWidth,H=box.clientHeight,[[x0,y0],[x1,y1]]=path.bounds(westPts);
   const s=westScale();
   svg.transition().duration(500).call(zoom.transform,d3.zoomIdentity.translate(W/2,H/2+14).scale(s).translate(-(x0+x1)/2,-(y0+y1)/2));
 }
 vAll.onclick=()=>setView('all'); vWest.onclick=()=>setView('west');
-document.getElementById('zin').onclick=()=>svg.transition().duration(250).call(zoom.scaleBy,2);
-document.getElementById('zout').onclick=()=>svg.transition().duration(250).call(zoom.scaleBy,.5);
+const gClamp=s=>Math.max(gbase*0.8,Math.min(gbase*60,s));
+document.getElementById('zin').onclick=()=>mode==='globe'?gAnimate(gproj.rotate(),gClamp(gproj.scale()*2)):svg.transition().duration(250).call(zoom.scaleBy,2);
+document.getElementById('zout').onclick=()=>mode==='globe'?gAnimate(gproj.rotate(),gClamp(gproj.scale()/2)):svg.transition().duration(250).call(zoom.scaleBy,.5);
+
+// ---- globe: drag to spin, pinch or wheel to zoom ----
+let gTimer=null, gRaf=0, gIdle=0;
+function gFrame(){ if(!gRaf) gRaf=requestAnimationFrame(()=>{gRaf=0;drawGlobe(true)}); clearTimeout(gIdle); gIdle=setTimeout(()=>drawGlobe(false),180) }
+function gAnimate(rot,scale){ if(gTimer)gTimer.stop();
+  const ir=d3.interpolate(gproj.rotate(),rot), is=d3.interpolate(gproj.scale(),scale);
+  gTimer=d3.timer(el=>{const u=Math.min(1,el/550),e=d3.easeCubicInOut(u);gproj.rotate(ir(e)).scale(is(e));
+    if(u>=1){gTimer.stop();gTimer=null;drawGlobe(false)}else drawGlobe(true)}) }
+const ptrs=new Map(), node=svg.node();
+node.addEventListener('pointerdown',e=>{if(mode!=='globe')return;if(gTimer){gTimer.stop();gTimer=null}ptrs.set(e.pointerId,[e.clientX,e.clientY])});
+window.addEventListener('pointermove',e=>{if(mode!=='globe'||!ptrs.has(e.pointerId))return;
+  const prev=ptrs.get(e.pointerId), cur=[e.clientX,e.clientY];
+  if(ptrs.size===1){const s=gproj.scale(),r=gproj.rotate(),f=180/Math.PI/s;
+    gproj.rotate([r[0]+(cur[0]-prev[0])*f,Math.max(-85,Math.min(85,r[1]-(cur[1]-prev[1])*f))]);}
+  else if(ptrs.size===2){const [a,b]=[...ptrs.values()], other=a===prev?b:a;
+    const d0=Math.hypot(prev[0]-other[0],prev[1]-other[1]), d1=Math.hypot(cur[0]-other[0],cur[1]-other[1]);
+    if(d0>0) gproj.scale(gClamp(gproj.scale()*d1/d0));}
+  ptrs.set(e.pointerId,cur); gFrame()});
+const ptrEnd=e=>ptrs.delete(e.pointerId);
+window.addEventListener('pointerup',ptrEnd); window.addEventListener('pointercancel',ptrEnd);
+node.addEventListener('wheel',e=>{if(mode!=='globe')return;e.preventDefault();gproj.scale(gClamp(gproj.scale()*Math.exp(-e.deltaY*0.002)));gFrame()},{passive:false});
+
+const vGlobe=document.getElementById('vGlobe'), hint=document.getElementById('hint');
+function setMode(m){ if(m===mode)return; mode=m; const globe=m==='globe';
+  box.classList.toggle('globe',globe); vGlobe.textContent=globe?'Flat map':'Globe'; vGlobe.setAttribute('aria-pressed',globe);
+  vAll.setAttribute('aria-pressed','true'); vWest.setAttribute('aria-pressed','false');
+  hint.textContent=globe?'Drag to spin · pinch or scroll to zoom':'Scroll or pinch to zoom · IDs appear when zoomed in';
+  if(globe){ svg.on('.zoom',null); g.attr('transform',null); gproj.rotate(G_HOME); gbase=1; k=1 }
+  else { ptrs.clear(); k=1; svg.call(zoom); svg.call(zoom.transform,d3.zoomIdentity) }
+  lastW=0; relayout() }
+vGlobe.onclick=()=>setMode(mode==='globe'?'flat':'globe');
 document.getElementById('zreset').onclick=()=>setView('all');
 
 const yr=document.getElementById('yr'),yrv=document.getElementById('yrv'),play=document.getElementById('play'),pyr=document.getElementById('playyr');
