@@ -6,7 +6,9 @@ A.update({
  'XFTE':['El Fuerte','','Sinaloa','Mexico',26.398199,-108.612000],
  'MX0016':['Bahía Tortugas Airfield','Bahía Tortugas','Baja California Sur','Mexico',27.706336,-114.912922],
  'MX0375':['Guachochi','Guachochi','Chihuahua','Mexico',26.842652,-107.061353]})
-ALIAS={'ABREOJOS':'MX-AJS'}   # Punta Abreojos (OurAirports); endpoint on 08-Oct-2015 and 11-Oct-2015
+ALIAS={'ABREOJOS':'MX-AJS','LAGUNA':'MX-0007','XSQA':'MX-1384'}   # per Wayne 29-Oct-2026: Punta Abreojos, Laguna San Ignacio, San Pedro de la Cueva
+RENAME={'TORTUGAS':'MX0016','MMXL':'MMML'}   # per Wayne 29-Oct-2026: Bahia Tortugas; MMXL was a typo for MMML
+NAME={'LAGUNA':'Laguna San Ignacio Airstrip'}   # Punta Abreojos (OurAirports); endpoint on 08-Oct-2015 and 11-Oct-2015
 CC={'US':'United States','MX':'Mexico','CA':'Canada','PA':'Panama','NI':'Nicaragua','BS':'Bahamas','TC':'Turks and Caicos','DO':'Dominican Republic'}
 OA={};OAalt=collections.defaultdict(list)
 for r in csv.DictReader(open('../oa/airports.csv',encoding='utf-8')):
@@ -37,7 +39,9 @@ for date,f,to,el in rows:
     for t,e in [(f,1),(to,1)]+[(x,0) for x in toks(el)]:
         t=t.strip().upper()
         if not t: continue
+        t=RENAME.get(t,t)
         rec,why=resolve(t,e)
+        if rec is not None and t in NAME: rec=[NAME[t]]+list(rec[1:])
         if rec is None: drops[why].add(t); continue
         key=t
         if key in seen: continue
