@@ -58,6 +58,7 @@ APPS = {
     'fuel-to-add': dict(file='site/index.html'),
     'clearance-delivery': dict(file='site/index.html'),
     'piston-ga-stats': dict(file='site/index.html'),
+    'claude-foreflight-primer': dict(file='site/index.html'),
     'airports-visited': dict(repo='geezer-geek-pilot-control-panel', file='site/airports/index.html',
                              credit_link=False),   # the page the credit links to
 }
