@@ -41,9 +41,12 @@ EXTRA = {
  'XFTE': ['El Fuerte', '', 'Sinaloa', 'Mexico', 26.398199, -108.612000],
  'MX0016': ['Bahía Tortugas Airfield', 'Bahía Tortugas', 'Baja California Sur', 'Mexico', 27.706336, -114.912922],
  'MX0375': ['Guachochi', 'Guachochi', 'Chihuahua', 'Mexico', 26.842652, -107.061353],
+ # get_airport 30-Oct-2026, per Wayne: PASO in the Alaska entries is Seldovia; KDMG was meant as KDMN
+ 'PASO': ['Seldovia', 'Seldovia', 'Alaska', 'United States', 59.443906, -151.705042],
+ 'KDMN': ['Deming Municipal', 'Deming', 'New Mexico', 'United States', 32.262389, -107.719000],
 }
 ALIAS = {'ABREOJOS': 'MX-AJS', 'LAGUNA': 'MX-0007', 'XSQA': 'MX-1384'}   # logged token -> OurAirports ident
-RENAME = {'TORTUGAS': 'MX0016', 'MMXL': 'MMML'}                          # logged token -> ID to count it under
+RENAME = {'TORTUGAS': 'MX0016', 'MMXL': 'MMML', 'KDMG': 'KDMN', 'U77': 'KSPK', 'RRTS': 'KRTS'}   # per Wayne 29/30-Oct-2026                          # logged token -> ID to count it under
 NAME = {'LAGUNA': 'Laguna San Ignacio Airstrip'}                          # display name override
 
 CC = {'US': 'United States', 'MX': 'Mexico', 'CA': 'Canada', 'PA': 'Panama', 'NI': 'Nicaragua', 'BS': 'Bahamas',
