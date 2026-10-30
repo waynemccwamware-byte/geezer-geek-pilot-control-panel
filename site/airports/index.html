@@ -84,6 +84,12 @@ body{margin:0;min-height:100vh;overscroll-behavior:none;background:radial-gradie
 .fine{font-size:12px;color:var(--text-muted);line-height:1.55;margin:0;padding:0 4px}
 @media (max-width:520px){.hint{display:none}.panel .id{font-size:20px}.playyr{font-size:26px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* ?embed=1: map and detail card only, for framing in another GeezerGeek page (e.g. the Claude + ForeFlight Primer) */
+body.embed{padding:8px 8px 0;min-height:0}
+body.embed .title-row, body.embed .purpose-line, body.embed .controls, body.embed .fine, body.embed .ggp-footer{display:none}
+body.embed .mapbox{height:calc(100vh - 168px)}
+body.embed .panel{margin-top:8px}
+.ripple{fill:none;stroke:#f5a623;pointer-events:none}
 </style>
 <!-- GGP-FOOTER-CSS START v1.3 · 29-Oct-2026 · shared footer styles, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
 <style>
@@ -131,7 +137,7 @@ body{margin:0;min-height:100vh;overscroll-behavior:none;background:radial-gradie
 <div class="rig">
   <div class="title-row">
     <h1>Airports Visited</h1>
-    <span class="ver mono">v1.2</span>
+    <span class="ver mono">v1.3</span>
   </div>
   <p class="purpose-line"><span class="purpose-label">Purpose:</span> Every airport in Wayne McClelland's ForeFlight logbook, 2013–2026, pinned by year of first visit. Filter by year, scrub or play the timeline, tap a pin for details.</p>
   <div class="stat" id="stat"></div>
@@ -330,6 +336,35 @@ function relayout(){raf=0;const W=box.clientWidth,H=box.clientHeight;if(!W||!H||
   try{layout()}catch(err){showErr(err)}}
 if(window.ResizeObserver){new ResizeObserver(()=>{if(!raf)raf=requestAnimationFrame(relayout)}).observe(box)}else{window.addEventListener('resize',()=>{if(!raf)raf=requestAnimationFrame(relayout)})}
 relayout();
+// ---- ?embed=1 hides page chrome; ?tour=1 runs a looping demo: pan/zoom, then "tap" two airports ----
+const qs=new URLSearchParams(location.search);
+if(qs.has('embed')) document.body.classList.add('embed');
+if(qs.has('tour')){
+  let stops=(qs.get('tour')||'').toUpperCase().split(',').map(id=>air.find(a=>a.id===id)).filter(Boolean);
+  if(!stops.length) stops=['KONP','XSQA'].map(id=>air.find(a=>a.id===id)).filter(Boolean);
+  let alive=true, step=0;
+  const stopTour=()=>{alive=false};
+  ['pointerdown','wheel','keydown'].forEach(t=>box.addEventListener(t,e=>{if(e.isTrusted)stopTour()},{passive:true}));
+  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+  const zoomTo=(a,sc,ms)=>{const W=box.clientWidth,H=box.clientHeight;return svg.transition().duration(ms).call(zoom.transform,d3.zoomIdentity.translate(W/2,H/2).scale(sc).translate(-a.x,-a.y)).end().catch(()=>{})};
+  const tap=a=>{const r0=6/k;gLbl.append('circle').attr('class','ripple').attr('cx',a.x).attr('cy',a.y).attr('r',r0).attr('stroke-width',3/k).style('opacity',1)
+    .transition().duration(900).attr('r',r0*5).style('opacity',0).remove();pick(a)};
+  (async()=>{
+    await wait(900);
+    while(alive && stops.length){
+      setView('west'); await wait(1800); if(!alive)break;
+      for(const a of stops){
+        if(!alive)break;
+        await zoomTo(a,Math.min(14,westK*2.2),1600); if(!alive)break;
+        await wait(500); tap(a); await wait(3600); if(!alive)break;
+        setView('west'); await wait(1400);
+      }
+      if(!alive)break;
+      setView('all'); sel=null; panel.className='card panel empty'; panel.textContent='Tap a pin for airport details.'; render(); await wait(2600);
+      if(++step>=3)break;   // three loops, then stay put
+    }
+  })();
+}
 }catch(err){showErr(err)}
 })();
 </script>
