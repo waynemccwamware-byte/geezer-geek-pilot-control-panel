@@ -159,6 +159,17 @@
   .app-group.g-plan { --g: var(--teal);  --g-tint: rgba(63, 167, 160, 0.08); }
   .app-group.g-safe { --g: #e2685c;      --g-tint: rgba(226, 104, 92, 0.07); }
   .app-group.g-ref  { --g: var(--text-muted); }
+
+  /* "New" group (v1.12): newest app first, full-width card, NEW badge, and the only cards allowed to animate.
+     Expires on data-new-until: label becomes data-after-label, badge and animation go away (App Conventions). */
+  .app-group.g-new { --g: #f2c94c; --g-tint: rgba(242, 201, 76, 0.07); }
+  :root[data-theme="light"] .app-group.g-new { --g: #a8801a; }
+  .badge-new {
+    display: inline-block; margin-left: 8px; padding: 1px 7px; vertical-align: 2px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+    color: #1a1205; background: var(--g); border-radius: 999px;
+  }
+  .app-preview.preview-wide { width: 100%; max-width: 560px; }
   :root[data-theme="light"] .app-group.g-wx { --g: #2f6fc4; }
   :root[data-theme="light"] .app-group.g-safe { --g: #b8473c; }
 
@@ -418,11 +429,54 @@
   <div class="rig">
     <div class="callsign-row">
       <h1><a class="title-link" href="qr.html" target="_blank" rel="noopener">GeezerGeek Pilot Apps</a></h1>
-      <span class="ver mono">v1.11</span>
+      <span class="ver mono">v1.12</span>
     </div>
     <p class="purpose-line">Some people spend their retirement volunteering at a food bank or the Red Cross&hellip; I fly doctors to Mexico and coach fellow pilots.</p>
 
     <div class="panel">
+      <section class="app-group g-new is-new" aria-labelledby="grp-new" data-new-until="2026-12-30" data-after-label="Claude &amp; AI">
+        <h2 class="group-label" id="grp-new">New</h2>
+        <div class="app-row row-1">
+          <a class="app-cell" href="https://claude-foreflight-primer.netlify.app/" aria-label="Open Claude + ForeFlight Primer">
+            <h3 class="app-name">Claude + ForeFlight Primer<span class="badge-new">NEW</span></h3>
+            <svg class="app-preview preview-wide" viewBox="0 0 400 104" role="img" aria-label="Claude and ForeFlight linked by a connector: your flights and data flow to Claude, new flights flow back">
+              <rect width="400" height="104" fill="#0d1117"/>
+              <rect x="8" y="8" width="128" height="88" rx="10" fill="#1b222c" stroke="#3a4454" stroke-width="1.5"/>
+              <text x="72" y="27" font-family="IBM Plex Sans, sans-serif" font-weight="600" font-size="12" fill="#e7e4dc" text-anchor="middle">Claude</text>
+              <g fill="#f5a623">
+                <rect x="20" y="74" width="7" height="12"/><rect x="31" y="68" width="7" height="18"/><rect x="42" y="60" width="7" height="26"/>
+                <rect x="53" y="64" width="7" height="22"/><rect x="64" y="58" width="7" height="28"/><rect x="75" y="50" width="7" height="36"/>
+                <rect x="86" y="62" width="7" height="24"/><rect x="97" y="57" width="7" height="29"/><rect x="108" y="64" width="7" height="22"/>
+                <rect x="119" y="70" width="7" height="16" fill="#7a5a1e"/>
+              </g>
+              <line x1="18" y1="86.5" x2="128" y2="86.5" stroke="#3a4454" stroke-width="1"/>
+              <rect x="20" y="35" width="104" height="13" rx="6.5" fill="none" stroke="#c98a1c" stroke-width="1.2"/>
+              <text x="72" y="44.5" font-family="IBM Plex Sans, sans-serif" font-size="8" fill="#e7e4dc" text-anchor="middle">Hours flown per year?</text>
+              <rect x="264" y="8" width="128" height="88" rx="10" fill="#1b222c" stroke="#3a4454" stroke-width="1.5"/>
+              <text x="328" y="27" font-family="IBM Plex Sans, sans-serif" font-weight="600" font-size="12" fill="#e7e4dc" text-anchor="middle">ForeFlight</text>
+              <g font-family="IBM Plex Sans, sans-serif" font-size="8.5" fill="#e7e4dc">
+                <rect x="276" y="36" width="104" height="14" rx="3" fill="#2a323f"/><text x="283" y="46">Logbook</text>
+                <rect x="276" y="54" width="104" height="14" rx="3" fill="#2a323f"/><text x="283" y="64">Aircraft &amp; W&amp;B</text>
+                <rect x="276" y="72" width="104" height="14" rx="3" fill="#2a323f"/><text x="283" y="82">Saved flights</text>
+              </g>
+              <path id="cfpData" d="M264 40 Q200 22 136 40" fill="none" stroke="#3a4454" stroke-width="1.5" stroke-dasharray="4 4"/>
+              <path id="cfpFlights" d="M136 66 Q200 84 264 66" fill="none" stroke="#3a4454" stroke-width="1.5" stroke-dasharray="4 4"/>
+              <text x="200" y="22" font-family="IBM Plex Mono, monospace" font-size="7.5" fill="#8b93a1" text-anchor="middle">your flights &amp; data</text>
+              <text x="200" y="95" font-family="IBM Plex Mono, monospace" font-size="7.5" fill="#8b93a1" text-anchor="middle">new flights</text>
+              <rect x="170" y="45" width="60" height="15" rx="7.5" fill="#10141a" stroke="#7a5a1e" stroke-width="1.2"/>
+              <text x="200" y="55.5" font-family="IBM Plex Mono, monospace" font-size="8.5" fill="#f5a623" text-anchor="middle">connector</text>
+              <g class="cfp-flow">
+                <circle r="3.6" fill="#f5a623"><animateMotion dur="3s" repeatCount="indefinite" path="M264 40 Q200 22 136 40"/></circle>
+                <circle r="3.6" fill="#f5a623"><animateMotion dur="3s" begin="-1s" repeatCount="indefinite" path="M264 40 Q200 22 136 40"/></circle>
+                <circle r="3.6" fill="#f5a623"><animateMotion dur="3s" begin="-2s" repeatCount="indefinite" path="M264 40 Q200 22 136 40"/></circle>
+                <circle r="3.6" fill="#3fa7a0"><animateMotion dur="4.5s" begin="-1.5s" repeatCount="indefinite" path="M136 66 Q200 84 264 66"/></circle>
+              </g>
+            </svg>
+            <p class="app-desc">Why and how to connect Claude to your ForeFlight account, step by step, then one real trip &mdash; an Oregon coast weekend &mdash; researched, planned and filed into ForeFlight from a single Claude chat. Narrated.</p>
+          </a>
+        </div>
+      </section>
+
       <section class="app-group g-wx" aria-labelledby="grp-wx">
         <h2 class="group-label" id="grp-wx">Weather &amp; Avionics</h2>
         <div class="app-row">
@@ -732,6 +786,22 @@
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
+</script>
+<script>
+  // --- "New" group: after data-new-until the group takes its permanent label, and the badge and animation go away.
+  //     The animation also stays still for anyone with Reduce Motion on. ---
+  document.querySelectorAll('.app-group.is-new').forEach((g) => {
+    const until = new Date(g.dataset.newUntil + 'T23:59:59');
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (new Date() > until) {
+      g.classList.remove('is-new');
+      g.querySelector('.group-label').innerHTML = g.dataset.afterLabel;
+      g.querySelectorAll('.badge-new').forEach((b) => b.remove());
+    }
+    if (still || !g.classList.contains('is-new')) {
+      g.querySelectorAll('svg').forEach((svg) => { try { svg.pauseAnimations(); svg.setCurrentTime(0.8); } catch (e) {} });
+    }
+  });
 </script>
 <!-- GGP-FOOTER-JS START v1.3 · 29-Oct-2026 · shared footer script, App Conventions §6a/§6b · master: Control Panel repo tools/ggp-footer -->
 <script>
