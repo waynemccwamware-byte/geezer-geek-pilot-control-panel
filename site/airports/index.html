@@ -371,7 +371,7 @@ if(qs.has('tour')){
     // or {ggpTour:'auto'} to run the normal loop above; {ggpTour:'hold'} says cues are coming.
     // No message within 12 s (an older page) and the normal loop runs anyway.
     let looping=false, target=null;
-    setView('west');
+    setView('all');   // open on every airport, fitted to the frame; the cues fly in from there
     const auto=()=>{ if(!looping && !touched){ looping=true; runLoop(); } };
     let fallback=setTimeout(auto,12000);
     window.addEventListener('message',e=>{
