@@ -367,8 +367,9 @@ if(qs.has('tour')){
   if(qs.get('cue')!=='1'){ runLoop(); }
   else{
     // ?cue=1 (v1.4): the page that frames the map drives it, so the zooms match its narration. It posts
-    // {ggpTour:'KONP'} to fly to and tap an airport, or {ggpTour:'auto'} to run the normal loop above.
-    // No message within 12 s (an older page, or no sound) and the normal loop runs anyway.
+    // {ggpTour:'KONP'} to fly to and tap an airport, {ggpTour:'all'} to zoom all the way out and stay,
+    // or {ggpTour:'auto'} to run the normal loop above; {ggpTour:'hold'} says cues are coming.
+    // No message within 12 s (an older page) and the normal loop runs anyway.
     let looping=false, target=null;
     setView('west');
     const auto=()=>{ if(!looping && !touched){ looping=true; runLoop(); } };
@@ -377,7 +378,12 @@ if(qs.has('tour')){
       if(e.source!==window.parent || !e.data || typeof e.data.ggpTour!=='string' || touched || looping) return;
       clearTimeout(fallback);
       const id=e.data.ggpTour.toUpperCase();
+      if(id==='HOLD'){ fallback=setTimeout(auto,45000); return; }   // the page will cue us; loop only if it never does
       if(id==='AUTO'){ auto(); return; }
+      if(id==='ALL'){   // finish: a slow zoom all the way out, and stay there
+        target=null; vAll.setAttribute('aria-pressed',true); vWest.setAttribute('aria-pressed',false);
+        if(mode==='globe') setView('all'); else svg.transition().duration(1800).call(zoom.transform,d3.zoomIdentity);
+        sel=null; panel.className='card panel empty'; panel.textContent='Tap a pin for airport details.'; render(); return; }
       const a=air.find(x=>x.id===id); if(!a) return;
       target=a;   // a newer cue replaces this one mid-flight; only the airport we end up at gets tapped
       zoomTo(a,Math.min(14,westK*2.2),1300).then(()=>{ if(!touched && !looping && target===a) tap(a); });
