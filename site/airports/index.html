@@ -137,7 +137,7 @@ body.embed .panel{margin-top:8px}
 <div class="rig">
   <div class="title-row">
     <h1>Airports Visited</h1>
-    <span class="ver mono">v1.3</span>
+    <span class="ver mono">v1.4</span>
   </div>
   <p class="purpose-line"><span class="purpose-label">Purpose:</span> Every airport in Wayne McClelland's ForeFlight logbook, 2013–2026, pinned by year of first visit. Filter by year, scrub or play the timeline, tap a pin for details.</p>
   <div class="stat" id="stat"></div>
@@ -336,20 +336,20 @@ function relayout(){raf=0;const W=box.clientWidth,H=box.clientHeight;if(!W||!H||
   try{layout()}catch(err){showErr(err)}}
 if(window.ResizeObserver){new ResizeObserver(()=>{if(!raf)raf=requestAnimationFrame(relayout)}).observe(box)}else{window.addEventListener('resize',()=>{if(!raf)raf=requestAnimationFrame(relayout)})}
 relayout();
-// ---- ?embed=1 hides page chrome; ?tour=1 runs a looping demo: pan/zoom, then "tap" two airports ----
+// ---- ?embed=1 hides page chrome; ?tour=1 runs a looping demo: pan/zoom, then "tap" two airports; &cue=1 lets the parent page time it ----
 const qs=new URLSearchParams(location.search);
 if(qs.has('embed')) document.body.classList.add('embed');
 if(qs.has('tour')){
   let stops=(qs.get('tour')||'').toUpperCase().split(',').map(id=>air.find(a=>a.id===id)).filter(Boolean);
   if(!stops.length) stops=['KONP','XSQA'].map(id=>air.find(a=>a.id===id)).filter(Boolean);
-  let alive=true, step=0;
-  const stopTour=()=>{alive=false};
+  let alive=true, step=0, touched=false;
+  const stopTour=()=>{alive=false;touched=true};
   ['pointerdown','wheel','keydown'].forEach(t=>box.addEventListener(t,e=>{if(e.isTrusted)stopTour()},{passive:true}));
   const wait=ms=>new Promise(r=>setTimeout(r,ms));
   const zoomTo=(a,sc,ms)=>{const W=box.clientWidth,H=box.clientHeight;return svg.transition().duration(ms).call(zoom.transform,d3.zoomIdentity.translate(W/2,H/2).scale(sc).translate(-a.x,-a.y)).end().catch(()=>{})};
   const tap=a=>{const r0=6/k;gLbl.append('circle').attr('class','ripple').attr('cx',a.x).attr('cy',a.y).attr('r',r0).attr('stroke-width',3/k).style('opacity',1)
     .transition().duration(900).attr('r',r0*5).style('opacity',0).remove();pick(a)};
-  (async()=>{
+  const runLoop=async()=>{
     await wait(900);
     while(alive && stops.length){
       setView('west'); await wait(1800); if(!alive)break;
@@ -363,7 +363,27 @@ if(qs.has('tour')){
       setView('all'); sel=null; panel.className='card panel empty'; panel.textContent='Tap a pin for airport details.'; render(); await wait(2600);
       if(++step>=3)break;   // three loops, then stay put
     }
-  })();
+  };
+  if(qs.get('cue')!=='1'){ runLoop(); }
+  else{
+    // ?cue=1 (v1.4): the page that frames the map drives it, so the zooms match its narration. It posts
+    // {ggpTour:'KONP'} to fly to and tap an airport, or {ggpTour:'auto'} to run the normal loop above.
+    // No message within 12 s (an older page, or no sound) and the normal loop runs anyway.
+    let looping=false, target=null;
+    setView('west');
+    const auto=()=>{ if(!looping && !touched){ looping=true; runLoop(); } };
+    let fallback=setTimeout(auto,12000);
+    window.addEventListener('message',e=>{
+      if(e.source!==window.parent || !e.data || typeof e.data.ggpTour!=='string' || touched || looping) return;
+      clearTimeout(fallback);
+      const id=e.data.ggpTour.toUpperCase();
+      if(id==='AUTO'){ auto(); return; }
+      const a=air.find(x=>x.id===id); if(!a) return;
+      target=a;   // a newer cue replaces this one mid-flight; only the airport we end up at gets tapped
+      zoomTo(a,Math.min(14,westK*2.2),1300).then(()=>{ if(!touched && !looping && target===a) tap(a); });
+    });
+    try{ window.parent.postMessage({ggpTourReady:true},'*'); }catch(e){}
+  }
 }
 }catch(err){showErr(err)}
 })();
