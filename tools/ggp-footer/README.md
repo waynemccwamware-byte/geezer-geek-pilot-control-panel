@@ -17,7 +17,8 @@ What the blocks do:
   class `ggp-share` does the same (the Quiz's top-bar and debrief buttons). Shares of data, such as
   Weather's "Share Analysis Results" or Piston's "Share comparison", are app code and are not touched.
 - Only the Control Panel shows "Opened N times" (Tally, `wamware/geezer-geek-pilot-control-panel`).
-  The apps keep their own counter code and count silently.
+  The apps keep their own counter code and count silently. Since v1.4 the count is a subtle link
+  (`count_href`) to `site/stats/`, a public page that reads every app's counter without bumping it.
 - The Control Panel maps the footer's colors to its light/dark tokens with one rule in its own CSS
   (`body .ggp-footer { --ggp-amber: var(--amber); … }`).
 

@@ -20,7 +20,7 @@ import re
 import sys
 from pathlib import Path
 
-VERSION = 'v1.3 · 29-Oct-2026'
+VERSION = 'v1.4 · 02-Nov-2026'
 
 CONTROL_PANEL_URL = 'https://geezer-geek-pilot-control-panel.netlify.app/'
 REFERENCE_URL = 'https://docs.google.com/document/d/1chfDa3JBCjsGykGjwrAFwOqMAS7d3_dIY9ieROLCIyU/preview'
@@ -45,7 +45,7 @@ INSTALL_ICON = ('<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke=
 # repo: the repo folder, when the key is not the repo name (a second page in one repo).
 APPS = {
     # count_base: estimated opens before the Tally counter started (20-Oct-2026); added to the shown number.
-    'geezer-geek-pilot-control-panel': dict(file='site/index.html', back=False, count=True, count_base=300,
+    'geezer-geek-pilot-control-panel': dict(file='site/index.html', back=False, count=True, count_base=300, count_href='stats/',
                                             install=('installBtn', 'Add this app to Home Screen')),
     'weather-history-probability': dict(file='site/index.html'),
     'digital-autopilots-quiz': dict(file='site/index.html'),
@@ -61,6 +61,8 @@ APPS = {
     'claude-foreflight-primer': dict(file='site/index.html'),
     'airports-visited': dict(repo='geezer-geek-pilot-control-panel', file='site/airports/index.html',
                              credit_link=False),   # the page the credit links to
+    # v1.4: open-counts page, linked from the Control Panel's "Opened N times" (Wayne, 02-Nov-2026)
+    'open-counts': dict(repo='geezer-geek-pilot-control-panel', file='site/stats/index.html'),
 }
 
 CSS = f'''<!-- GGP-FOOTER-CSS START {VERSION} · shared footer styles, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
@@ -87,6 +89,8 @@ CSS = f'''<!-- GGP-FOOTER-CSS START {VERSION} · shared footer styles, App Conve
 .ggp-footer .ggp-extra a:hover, .ggp-footer .ggp-credit a:hover{{ color:var(--ggp-amber); border-bottom-color:var(--ggp-amber); }}
 .ggp-footer .ggp-count{{ margin-top:6px; }}
 .ggp-footer .ggp-count:empty{{ display:none; }}
+.ggp-footer .ggp-count a{{ color:inherit; text-decoration:none; border-bottom:1px dotted var(--ggp-bezel-hi); padding-bottom:1px; }}
+.ggp-footer .ggp-count a:hover{{ color:var(--ggp-amber); border-bottom-color:var(--ggp-amber); }}
 .ggp-footer .ggp-actions{{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:12px; }}
 .ggp-footer .ggp-pill{{
   display:inline-flex; align-items:center; gap:7px; margin:0; padding:8px 16px;
@@ -148,7 +152,14 @@ JS = f'''<!-- GGP-FOOTER-JS START {VERSION} · shared footer script, App Convent
       .then(d => {{
         const base = parseInt(countEl.dataset.base, 10) || 0;  // pre-Tally opens, App Conventions §6b
         const n = d && typeof d.visit === 'number' ? d.visit + base : null;
-        if (typeof n === 'number') countEl.textContent = 'Opened ' + n.toLocaleString() + (n === 1 ? ' time' : ' times');
+        if (typeof n !== 'number') return;
+        const text = 'Opened ' + n.toLocaleString() + (n === 1 ? ' time' : ' times');
+        const href = countEl.dataset.href;   // v1.4: the count links to the open-counts page
+        if (href) {{
+          const a = document.createElement('a');
+          a.href = href; a.textContent = text; a.title = 'Open counts for every app';
+          countEl.replaceChildren(a);
+        }} else countEl.textContent = text;
       }})
       .catch(() => {{ /* counter is a nice-to-have, never block the app */ }});
   }}
@@ -172,6 +183,8 @@ def footer_html(cfg):
     if cfg.get('count'):
         base = cfg.get('count_base', 0)
         attr = f' data-base="{base}"' if base else ''
+        if cfg.get('count_href'):
+            attr += f' data-href="{cfg["count_href"]}"'
         lines.append(f'  <div class="ggp-count" id="ggpCount"{attr}></div>')
     lines.append('  <div class="ggp-actions">')
     lines.append(f'    <button class="ggp-pill ggp-share" type="button">{SHARE_ICON}<span>{SHARE_LABEL}</span></button>')

@@ -383,7 +383,7 @@
     .launch-btn { transition: none; }
   }
 </style>
-<!-- GGP-FOOTER-CSS START v1.3 · 29-Oct-2026 · shared footer styles, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
+<!-- GGP-FOOTER-CSS START v1.4 · 02-Nov-2026 · shared footer styles, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
 <style>
 .ggp-footer{
   --ggp-amber:#f5a623; --ggp-muted:#8b93a1; --ggp-bezel:#2a323f; --ggp-bezel-hi:#3a4454;
@@ -407,6 +407,8 @@
 .ggp-footer .ggp-extra a:hover, .ggp-footer .ggp-credit a:hover{ color:var(--ggp-amber); border-bottom-color:var(--ggp-amber); }
 .ggp-footer .ggp-count{ margin-top:6px; }
 .ggp-footer .ggp-count:empty{ display:none; }
+.ggp-footer .ggp-count a{ color:inherit; text-decoration:none; border-bottom:1px dotted var(--ggp-bezel-hi); padding-bottom:1px; }
+.ggp-footer .ggp-count a:hover{ color:var(--ggp-amber); border-bottom-color:var(--ggp-amber); }
 .ggp-footer .ggp-actions{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:12px; }
 .ggp-footer .ggp-pill{
   display:inline-flex; align-items:center; gap:7px; margin:0; padding:8px 16px;
@@ -711,10 +713,10 @@
 
     <p class="disclaimer">Disclaimer: I am neither a ground instructor nor a flight instructor. All information is for general background and should be verified with a certified flight instructor and your own research.</p>
 
-    <!-- GGP-FOOTER START v1.3 · 29-Oct-2026 · shared footer, App Conventions §5a · master: Control Panel repo tools/ggp-footer -->
+    <!-- GGP-FOOTER START v1.4 · 02-Nov-2026 · shared footer, App Conventions §5a · master: Control Panel repo tools/ggp-footer -->
 <footer class="ggp-footer">
   <div class="ggp-credit">Wayne McClelland (<a href="https://geezer-geek-pilot-control-panel.netlify.app/airports/" target="_blank" rel="noopener">airports visited</a>), <a href="https://youtube.com/@GeezerGeekPilot" target="_blank" rel="noopener">GeezerGeek Pilot</a>, <a href="https://docs.google.com/document/d/1chfDa3JBCjsGykGjwrAFwOqMAS7d3_dIY9ieROLCIyU/preview" target="_blank" rel="noopener">Reference Materials</a></div>
-  <div class="ggp-count" id="ggpCount" data-base="300"></div>
+  <div class="ggp-count" id="ggpCount" data-base="300" data-href="stats/"></div>
   <div class="ggp-actions">
     <button class="ggp-pill ggp-share" type="button"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/></svg><span>Share GeezerGeek Pilot Apps with pilot friends</span></button>
     <button class="ggp-pill" id="installBtn" type="button" style="display:none;"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"/><polyline points="7 8 12 3 17 8"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg><span>Add this app to Home Screen</span></button>
@@ -803,7 +805,7 @@
     }
   });
 </script>
-<!-- GGP-FOOTER-JS START v1.3 · 29-Oct-2026 · shared footer script, App Conventions §6a/§6b · master: Control Panel repo tools/ggp-footer -->
+<!-- GGP-FOOTER-JS START v1.4 · 02-Nov-2026 · shared footer script, App Conventions §6a/§6b · master: Control Panel repo tools/ggp-footer -->
 <script>
 (() => {
   if (window.__ggpFooter) return;
@@ -846,7 +848,14 @@
       .then(d => {
         const base = parseInt(countEl.dataset.base, 10) || 0;  // pre-Tally opens, App Conventions §6b
         const n = d && typeof d.visit === 'number' ? d.visit + base : null;
-        if (typeof n === 'number') countEl.textContent = 'Opened ' + n.toLocaleString() + (n === 1 ? ' time' : ' times');
+        if (typeof n !== 'number') return;
+        const text = 'Opened ' + n.toLocaleString() + (n === 1 ? ' time' : ' times');
+        const href = countEl.dataset.href;   // v1.4: the count links to the open-counts page
+        if (href) {
+          const a = document.createElement('a');
+          a.href = href; a.textContent = text; a.title = 'Open counts for every app';
+          countEl.replaceChildren(a);
+        } else countEl.textContent = text;
       })
       .catch(() => { /* counter is a nice-to-have, never block the app */ });
   }
