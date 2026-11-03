@@ -128,6 +128,7 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
   const APPS = [
     { name: 'GeezerGeek Pilot Apps (Control Panel)', url: '../', g: 'g-panel', src: 'Tally', read: tally('geezer-geek-pilot-control-panel'), base: BASE_CP },
     { name: 'Claude + ForeFlight Primer',     url: 'https://claude-foreflight-primer.netlify.app/',    g: 'g-new',  src: 'Tally', read: tally('claude-foreflight-primer') },
+    { name: 'GA Accident Stats',              url: 'https://piston-ga-stats.netlify.app/',             g: 'g-safe', src: 'Tally', read: tally('piston-ga-stats') },
     { name: 'Weather History and Probability', url: 'https://weather-history-probability.netlify.app/', g: 'g-wx',  src: 'own counter',
       read: 'https://weather-history-probability.netlify.app/.netlify/functions/hit-counter?mode=read' },
     { name: 'Know the Score(board)? – a Quiz', url: 'https://digital-autopilots-quiz.netlify.app/',     g: 'g-wx',   src: 'Tally', read: tally('digital-autopilots-quiz') },
@@ -137,7 +138,6 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
     { name: "Day's Flight Schedule",          url: 'https://days-flight-schedule.netlify.app/',        g: 'g-plan', src: 'Tally', read: tally('days-flight-schedule') },
     { name: 'How Much Fuel to Add?',          url: 'https://fuel-to-add.netlify.app/',                 g: 'g-plan', src: 'Abacus',
       read: 'https://abacus.jasoncameron.dev/get/wamware/fuel-to-add' },                                // /get/: no increment
-    { name: 'GA Accident Stats',              url: 'https://piston-ga-stats.netlify.app/',             g: 'g-safe', src: 'Tally', read: tally('piston-ga-stats') },
   ];
 
   const list = document.getElementById('list');
