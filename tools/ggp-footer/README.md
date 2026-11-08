@@ -19,7 +19,7 @@ What the blocks do:
 - Only the Control Panel shows "Opened N times" (Tally, `wamware/geezer-geek-pilot-control-panel`).
   The apps keep their own counter code and count silently. Since v1.4 the count is a subtle link
   (`count_href`) to `site/stats/`, a public page that reads every app's counter without bumping it.
-- v1.6: a "Send feedback" pill opens the user's email app with a message to Wayne, subject
+- v1.6: a feedback pill ("Feedback to GeezerGeek Pilot" from v1.7) opens the user's email app with a message to Wayne, subject
   "GeezerGeek feedback: <label>". If no email app opens, it shows the address with a Copy button.
   The address is assembled in the script, not written in the page. The Control Panel has its own
   button under the purpose line (class `ggp-feedback`, same handler) instead (`feedback=False`).

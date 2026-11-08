@@ -148,7 +148,7 @@
   /* v1.16: feedback button under the purpose line. v1.17: opens an email to Wayne via the shared footer
      script's ggp-feedback handler (App Conventions §5, footer v1.6) */
   .purpose-line:has(+ .feedback-row) { margin-bottom: 10px; }
-  .feedback-row { margin: 0 4px 24px; }
+  .feedback-row { margin: 0 4px 24px; text-align: right; }  /* v1.19: right-justified */
   .feedback-btn {
     display: inline-flex; align-items: center; gap: 7px;
     padding: 7px 14px; border: 1px solid var(--teal); border-radius: 20px;
@@ -399,7 +399,7 @@
     .launch-btn { transition: none; }
   }
 </style>
-<!-- GGP-FOOTER-CSS START v1.6 · 07-Nov-2026 · shared footer styles, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
+<!-- GGP-FOOTER-CSS START v1.7 · 07-Nov-2026 · shared footer styles, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
 <style>
 .ggp-footer{
   --ggp-amber:#f5a623; --ggp-muted:#8b93a1; --ggp-bezel:#2a323f; --ggp-bezel-hi:#3a4454;
@@ -454,7 +454,7 @@
   <div class="rig">
     <div class="callsign-row">
       <h1><a class="title-link" href="qr.html" target="_blank" rel="noopener">GeezerGeek Pilot Apps</a></h1>
-      <span class="ver mono">v1.18</span>
+      <span class="ver mono">v1.19</span>
     </div>
     <p class="purpose-line">Some people spend their retirement volunteering at a food bank or the Red Cross&hellip; I fly doctors to Mexico and coach fellow pilots.</p>
     <div class="feedback-row">
@@ -749,7 +749,7 @@
 
     <p class="disclaimer">Disclaimer: I am neither a ground instructor nor a flight instructor. All information is for general background and should be verified with a certified flight instructor and your own research.</p>
 
-    <!-- GGP-FOOTER START v1.6 · 07-Nov-2026 · shared footer, App Conventions §5a · master: Control Panel repo tools/ggp-footer -->
+    <!-- GGP-FOOTER START v1.7 · 07-Nov-2026 · shared footer, App Conventions §5a · master: Control Panel repo tools/ggp-footer -->
 <footer class="ggp-footer">
   <div class="ggp-credit">Wayne McClelland (<a href="https://geezer-geek-pilot-control-panel.netlify.app/airports/" target="_blank" rel="noopener">airports visited</a>), <a href="https://youtube.com/@GeezerGeekPilot" target="_blank" rel="noopener">GeezerGeek Pilot</a>, <a href="https://docs.google.com/document/d/1chfDa3JBCjsGykGjwrAFwOqMAS7d3_dIY9ieROLCIyU/preview" target="_blank" rel="noopener">Reference Materials</a></div>
   <div class="ggp-count" id="ggpCount" data-base="300" data-href="stats/"></div>
@@ -841,7 +841,7 @@
     }
   });
 </script>
-<!-- GGP-FOOTER-JS START v1.6 · 07-Nov-2026 · shared footer script, App Conventions §6a/§6b · master: Control Panel repo tools/ggp-footer -->
+<!-- GGP-FOOTER-JS START v1.7 · 07-Nov-2026 · shared footer script, App Conventions §6a/§6b · master: Control Panel repo tools/ggp-footer -->
 <script>
 (() => {
   if (window.__ggpFooter) return;

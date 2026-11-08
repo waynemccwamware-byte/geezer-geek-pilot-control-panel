@@ -20,7 +20,7 @@ import re
 import sys
 from pathlib import Path
 
-VERSION = 'v1.6 · 07-Nov-2026'
+VERSION = 'v1.7 · 07-Nov-2026'
 
 CONTROL_PANEL_URL = 'https://geezer-geek-pilot-control-panel.netlify.app/'
 REFERENCE_URL = 'https://docs.google.com/document/d/1chfDa3JBCjsGykGjwrAFwOqMAS7d3_dIY9ieROLCIyU/preview'
@@ -29,7 +29,7 @@ AIRPORTS_URL = CONTROL_PANEL_URL + 'airports/'   # Wayne's airports-visited map 
 # v1.6: feedback opens the user's email app (mailto) addressed to Wayne; the address is assembled in the
 # script, not written in the page, to keep it away from address scrapers. (v1.5's Netlify form retired.)
 FEEDBACK_USER, FEEDBACK_DOMAIN = 'waynemcc', 'wamware.com'
-FEEDBACK_LABEL = 'Send feedback'
+FEEDBACK_LABEL = 'Feedback to GeezerGeek Pilot'   # v1.7: matches the Control Panel button
 
 SHARE_LABEL = 'Share GeezerGeek Pilot Apps with pilot friends'
 SHARE_TITLE = 'GeezerGeek Pilot Apps'
