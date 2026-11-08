@@ -91,7 +91,7 @@ body.embed .mapbox{height:calc(100vh - 168px)}
 body.embed .panel{margin-top:8px}
 .ripple{fill:none;stroke:#f5a623;pointer-events:none}
 </style>
-<!-- GGP-FOOTER-CSS START v1.7 · 07-Nov-2026 · shared footer styles, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
+<!-- GGP-FOOTER-CSS START v1.8 · 07-Nov-2026 · shared footer styles, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
 <style>
 .ggp-footer{
   --ggp-amber:#f5a623; --ggp-muted:#8b93a1; --ggp-bezel:#2a323f; --ggp-bezel-hi:#3a4454;
@@ -169,7 +169,7 @@ body.embed .panel{margin-top:8px}
   <div class="card panel empty" id="panel">Tap a pin for airport details.</div>
   <p class="fine">Data: Wayne's ForeFlight logbook (departure, destination and airports in the Route field), simulator sessions left out; snapshot of 30-Oct-2026. Names and coordinates from ForeFlight, or from the OurAirports database where ForeFlight's logbook lookup had none.</p>
 </div>
-<!-- GGP-FOOTER START v1.7 · 07-Nov-2026 · shared footer, App Conventions §5a · master: Control Panel repo tools/ggp-footer -->
+<!-- GGP-FOOTER START v1.8 · 07-Nov-2026 · shared footer, App Conventions §5a · master: Control Panel repo tools/ggp-footer -->
 <footer class="ggp-footer">
   <div class="ggp-back"><a href="https://geezer-geek-pilot-control-panel.netlify.app/">&larr; Back to GeezerGeek Pilot Apps</a></div>
   <div class="ggp-credit">Wayne McClelland, <a href="https://youtube.com/@GeezerGeekPilot" target="_blank" rel="noopener">GeezerGeek Pilot</a>, <a href="https://docs.google.com/document/d/1chfDa3JBCjsGykGjwrAFwOqMAS7d3_dIY9ieROLCIyU/preview" target="_blank" rel="noopener">Reference Materials</a></div>
@@ -404,7 +404,7 @@ if(qs.has('tour')){
 }catch(err){showErr(err)}
 })();
 </script>
-<!-- GGP-FOOTER-JS START v1.7 · 07-Nov-2026 · shared footer script, App Conventions §6a/§6b · master: Control Panel repo tools/ggp-footer -->
+<!-- GGP-FOOTER-JS START v1.8 · 07-Nov-2026 · shared footer script, App Conventions §6a/§6b · master: Control Panel repo tools/ggp-footer -->
 <script>
 (() => {
   if (window.__ggpFooter) return;
@@ -448,13 +448,12 @@ if(qs.has('tour')){
     const addr = ['waynemcc', 'wamware.com'].join('@');
     const app = btn.dataset.app || document.title;
     const subject = 'GeezerGeek feedback: ' + app;
-    const body = 'App: ' + app + '\nPage: ' + location.href + '\n\nWhat happened, or what would you like to see?\n\n\n'
-      + '—\nDevice: ' + (navigator.userAgent || '').slice(0, 200);
+    // v1.8: subject only, empty body (no page link or device string), per Wayne
     let left = false;
     const onLeave = () => { left = true; };
     window.addEventListener('blur', onLeave, { once: true });
     document.addEventListener('visibilitychange', onLeave, { once: true });
-    window.location.href = 'mailto:' + addr + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    window.location.href = 'mailto:' + addr + '?subject=' + encodeURIComponent(subject);
     setTimeout(() => {
       window.removeEventListener('blur', onLeave);
       document.removeEventListener('visibilitychange', onLeave);

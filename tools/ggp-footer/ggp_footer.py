@@ -20,7 +20,7 @@ import re
 import sys
 from pathlib import Path
 
-VERSION = 'v1.7 · 07-Nov-2026'
+VERSION = 'v1.8 · 07-Nov-2026'
 
 CONTROL_PANEL_URL = 'https://geezer-geek-pilot-control-panel.netlify.app/'
 REFERENCE_URL = 'https://docs.google.com/document/d/1chfDa3JBCjsGykGjwrAFwOqMAS7d3_dIY9ieROLCIyU/preview'
@@ -169,13 +169,12 @@ JS = f'''<!-- GGP-FOOTER-JS START {VERSION} · shared footer script, App Convent
     const addr = ['{FEEDBACK_USER}', '{FEEDBACK_DOMAIN}'].join('@');
     const app = btn.dataset.app || document.title;
     const subject = 'GeezerGeek feedback: ' + app;
-    const body = 'App: ' + app + '\\nPage: ' + location.href + '\\n\\nWhat happened, or what would you like to see?\\n\\n\\n'
-      + '—\\nDevice: ' + (navigator.userAgent || '').slice(0, 200);
+    // v1.8: subject only, empty body (no page link or device string), per Wayne
     let left = false;
     const onLeave = () => {{ left = true; }};
     window.addEventListener('blur', onLeave, {{ once: true }});
     document.addEventListener('visibilitychange', onLeave, {{ once: true }});
-    window.location.href = 'mailto:' + addr + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    window.location.href = 'mailto:' + addr + '?subject=' + encodeURIComponent(subject);
     setTimeout(() => {{
       window.removeEventListener('blur', onLeave);
       document.removeEventListener('visibilitychange', onLeave);
