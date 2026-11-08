@@ -20,13 +20,15 @@ import re
 import sys
 from pathlib import Path
 
-VERSION = 'v1.5 · 07-Nov-2026'
+VERSION = 'v1.6 · 07-Nov-2026'
 
 CONTROL_PANEL_URL = 'https://geezer-geek-pilot-control-panel.netlify.app/'
 REFERENCE_URL = 'https://docs.google.com/document/d/1chfDa3JBCjsGykGjwrAFwOqMAS7d3_dIY9ieROLCIyU/preview'
 YOUTUBE_URL = 'https://youtube.com/@GeezerGeekPilot'
 AIRPORTS_URL = CONTROL_PANEL_URL + 'airports/'   # Wayne's airports-visited map (v1.2)
-FEEDBACK_URL = CONTROL_PANEL_URL + 'feedback/'   # v1.5: shared feedback form (Netlify Forms), ?app=<APPS key>
+# v1.6: feedback opens the user's email app (mailto) addressed to Wayne; the address is assembled in the
+# script, not written in the page, to keep it away from address scrapers. (v1.5's Netlify form retired.)
+FEEDBACK_USER, FEEDBACK_DOMAIN = 'waynemcc', 'wamware.com'
 FEEDBACK_LABEL = 'Send feedback'
 
 SHARE_LABEL = 'Share GeezerGeek Pilot Apps with pilot friends'
@@ -47,30 +49,29 @@ INSTALL_ICON = ('<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke=
 # the apps keep counting silently in their own scripts). extras: app-specific links shown under the
 # back link. install: (button id, label) for an app that has its own install code.
 # repo: the repo folder, when the key is not the repo name (a second page in one repo).
-# feedback: show the Send feedback pill (default True); it opens FEEDBACK_URL?app=<key>.
+# feedback: show the Send feedback pill (default True); it opens an email to Wayne naming the app (label).
+# label: the app's name as it should appear in the feedback email's subject.
 APPS = {
     # count_base: estimated opens before the Tally counter started (20-Oct-2026); added to the shown number.
     'geezer-geek-pilot-control-panel': dict(file='site/index.html', back=False, count=True, count_base=300, count_href='stats/',
-                                            feedback=False,   # v1.5: has its own button under the purpose line
+                                            feedback=False, label='GeezerGeek Pilot Apps',   # has its own feedback button under the purpose line
                                             install=('installBtn', 'Add this app to Home Screen')),
-    'weather-history-probability': dict(file='site/index.html'),
-    'digital-autopilots-quiz': dict(file='site/index.html'),
-    'tec-route-lookup': dict(file='public/index.html',
+    'weather-history-probability': dict(file='site/index.html', label='Weather History and Probability'),
+    'digital-autopilots-quiz': dict(file='site/index.html', label='Know the Score(board)? – a Quiz'),
+    'tec-route-lookup': dict(file='public/index.html', label='TEC Route Lookup',
                              install=('installBtnFooter', 'Add this app to Home Screen/Desktop')),
-    'atc-chair-fly-trainer': dict(file='site/index.html', extras=[
+    'atc-chair-fly-trainer': dict(file='site/index.html', label='ATC Chair-Fly Trainer', extras=[
         ('Write-up on Simple Chair-Flying Exercise for Listen, Set, Read Back',
          'https://docs.google.com/document/d/1DKgs6nKMK6VDG0y59rxrQ6QCxwCi_waNuai61etXfFM/preview')]),
-    'days-flight-schedule': dict(file='site/index.html', install=('installBtn', 'Install this app')),
-    'fuel-to-add': dict(file='site/index.html'),
-    'clearance-delivery': dict(file='site/index.html'),
-    'piston-ga-stats': dict(file='site/index.html'),
-    'claude-foreflight-primer': dict(file='site/index.html'),
-    'airports-visited': dict(repo='geezer-geek-pilot-control-panel', file='site/airports/index.html',
+    'days-flight-schedule': dict(file='site/index.html', label="Day's Flight Schedule", install=('installBtn', 'Install this app')),
+    'fuel-to-add': dict(file='site/index.html', label='How Much Fuel to Add?'),
+    'clearance-delivery': dict(file='site/index.html', label='Clearance Delivery Trainer'),
+    'piston-ga-stats': dict(file='site/index.html', label='GA Accident Stats'),
+    'claude-foreflight-primer': dict(file='site/index.html', label='Claude + ForeFlight Primer'),
+    'airports-visited': dict(repo='geezer-geek-pilot-control-panel', file='site/airports/index.html', label='Airports Visited',
                              credit_link=False),   # the page the credit links to
     # v1.4: open-counts page, linked from the Control Panel's "Opened N times" (Wayne, 02-Nov-2026)
-    'open-counts': dict(repo='geezer-geek-pilot-control-panel', file='site/stats/index.html'),
-    # v1.5: the feedback form itself (Wayne, 07-Nov-2026)
-    'feedback': dict(repo='geezer-geek-pilot-control-panel', file='site/feedback/index.html', feedback=False),
+    'open-counts': dict(repo='geezer-geek-pilot-control-panel', file='site/stats/index.html', label='App Open Counts'),
 }
 
 CSS = f'''<!-- GGP-FOOTER-CSS START {VERSION} · shared footer styles, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
@@ -106,6 +107,12 @@ CSS = f'''<!-- GGP-FOOTER-CSS START {VERSION} · shared footer styles, App Conve
   font:inherit; font-size:12.5px; line-height:1.2; cursor:pointer; transition:color .15s ease, border-color .15s ease;
 }}
 .ggp-footer a.ggp-pill{{ text-decoration:none; }}
+/* v1.6: shown under a feedback button when no email app opened */
+.ggp-fb-note{{ flex-basis:100%; margin:10px auto 0; max-width:460px; padding:10px 12px; border:1px solid #3a4454; border-radius:6px;
+  font:12px/1.5 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif; color:#8b93a1; text-align:center; }}
+.ggp-fb-note b{{ color:#e7e4dc; font-weight:500; user-select:all; }}
+.ggp-fb-note button{{ margin-left:8px; padding:3px 10px; border:1px solid #3a4454; border-radius:12px; background:transparent;
+  color:#f5a623; font:inherit; cursor:pointer; }}
 .ggp-footer .ggp-pill:hover{{ color:var(--ggp-amber); border-color:var(--ggp-amber); background:transparent; }}
 .ggp-footer .ggp-pill svg{{ width:15px; height:15px; flex-shrink:0; }}
 .ggp-footer .ggp-pill span{{ text-wrap:balance; }}
@@ -153,6 +160,40 @@ JS = f'''<!-- GGP-FOOTER-JS START {VERSION} · shared footer script, App Convent
         + '&body=' + encodeURIComponent(SHARE_TEXT + ' ' + SHARE_URL);
     }}
   }});
+  // v1.6 feedback: any element with class ggp-feedback opens an email to Wayne naming its data-app.
+  // If no email app takes over within ~1.5 s (page still focused), show the address with a Copy button.
+  document.addEventListener('click', (ev) => {{
+    const btn = ev.target instanceof Element ? ev.target.closest('.ggp-feedback') : null;
+    if (!btn) return;
+    ev.preventDefault();
+    const addr = ['{FEEDBACK_USER}', '{FEEDBACK_DOMAIN}'].join('@');
+    const app = btn.dataset.app || document.title;
+    const subject = 'GeezerGeek feedback: ' + app;
+    const body = 'App: ' + app + '\\nPage: ' + location.href + '\\n\\nWhat happened, or what would you like to see?\\n\\n\\n'
+      + '—\\nDevice: ' + (navigator.userAgent || '').slice(0, 200);
+    let left = false;
+    const onLeave = () => {{ left = true; }};
+    window.addEventListener('blur', onLeave, {{ once: true }});
+    document.addEventListener('visibilitychange', onLeave, {{ once: true }});
+    window.location.href = 'mailto:' + addr + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    setTimeout(() => {{
+      window.removeEventListener('blur', onLeave);
+      document.removeEventListener('visibilitychange', onLeave);
+      if (left || !document.hasFocus()) return;           // an email app opened
+      const host = btn.parentElement;
+      if (host.querySelector('.ggp-fb-note')) return;
+      const note = document.createElement('div');
+      note.className = 'ggp-fb-note';
+      note.setAttribute('role', 'status');
+      note.innerHTML = 'No email app opened? Write to <b></b><button type="button">Copy address</button>';
+      note.querySelector('b').textContent = addr;
+      note.querySelector('button').addEventListener('click', async (e) => {{
+        try {{ await navigator.clipboard.writeText(addr); e.target.textContent = 'Copied'; }}
+        catch (err) {{ e.target.textContent = 'Select it above'; }}
+      }});
+      host.appendChild(note);
+    }}, 1500);
+  }});
   // Open counter: shown only where the footer has #ggpCount (the Control Panel). Apps count silently.
   const countEl = document.getElementById('ggpCount');
   if (countEl) {{
@@ -198,7 +239,8 @@ def footer_html(cfg):
     lines.append('  <div class="ggp-actions">')
     lines.append(f'    <button class="ggp-pill ggp-share" type="button">{SHARE_ICON}<span>{SHARE_LABEL}</span></button>')
     if cfg.get('feedback', True):
-        lines.append(f'    <a class="ggp-pill ggp-feedback" href="{FEEDBACK_URL}?app={cfg["key"]}">{FEEDBACK_ICON}<span>{FEEDBACK_LABEL}</span></a>')
+        app = cfg.get('label', cfg['key']).replace('"', '&quot;')
+        lines.append(f'    <button class="ggp-pill ggp-feedback" type="button" data-app="{app}">{FEEDBACK_ICON}<span>{FEEDBACK_LABEL}</span></button>')
     if cfg.get('install'):
         bid, label = cfg['install']
         lines.append(f'    <button class="ggp-pill" id="{bid}" type="button" style="display:none;">{INSTALL_ICON}<span>{label}</span></button>')
