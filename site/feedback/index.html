@@ -14,7 +14,9 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* App Conventions §3a palette. Control Panel sub-page (like /stats/): the shared feedback form (§5c).
-   Submissions go to Netlify Forms (form name "feedback") and are emailed to Wayne by a Netlify notification. */
+   Each submission goes to Netlify Forms (form "feedback", the free archive) and to MAILER_URL, a Google Apps
+   Script web app in Wayne's account that emails it to him (master: tools/feedback/Code.gs; Netlify's own email
+   notifications are a paid feature on his plan). */
 :root{
   --bg-deep:#10141a; --bg-panel:#1b222c; --bezel:#2a323f; --bezel-hi:#3a4454;
   --amber:#f5a623; --amber-dim:#7a5a1e; --amber-glow:rgba(245,166,35,0.35);
@@ -125,7 +127,7 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 <div class="rig">
   <div class="callsign-row">
     <h1>Feedback to the GeezerGeek</h1>
-    <span class="ver mono">v1.0</span>
+    <span class="ver mono">v1.1</span>
   </div>
   <p class="purpose-line"><span class="purpose-label">Purpose:</span> Bugs, ideas, questions or gripes about the GeezerGeek Pilot apps go straight to Wayne.</p>
 
@@ -211,6 +213,9 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 
 <script>
 (() => {
+  // Google Apps Script web app that emails each submission to Wayne (tools/feedback/README.md).
+  // Empty = not set up yet; submissions still reach the Netlify Forms archive.
+  const MAILER_URL = '';
   const form = document.getElementById('fbForm');
   const pick = document.getElementById('fAppPick');
   const appField = document.getElementById('fApp');
@@ -233,12 +238,19 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
     status.className = 'status';
     status.textContent = 'Sending…';
     try {
-      const r = await fetch('/', {
+      const body = new URLSearchParams(new FormData(form)).toString();
+      // Both in parallel; success if either one lands. The mailer reply is opaque (no-cors), so a
+      // resolved fetch is the best signal available from it.
+      const toNetlify = fetch('/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams(new FormData(form)).toString(),
-      });
-      if (!r.ok) throw new Error('HTTP ' + r.status);
+        body,
+      }).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); });
+      const toMailer = MAILER_URL
+        ? fetch(MAILER_URL, { method: 'POST', mode: 'no-cors', body: new URLSearchParams(body) })
+        : Promise.reject(new Error('no mailer'));
+      const results = await Promise.allSettled([toNetlify, toMailer]);
+      if (!results.some(x => x.status === 'fulfilled')) throw new Error('both failed');
       form.hidden = true;
       done.hidden = false;
       status.textContent = '';
