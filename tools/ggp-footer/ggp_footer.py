@@ -20,12 +20,14 @@ import re
 import sys
 from pathlib import Path
 
-VERSION = 'v1.4 · 02-Nov-2026'
+VERSION = 'v1.5 · 07-Nov-2026'
 
 CONTROL_PANEL_URL = 'https://geezer-geek-pilot-control-panel.netlify.app/'
 REFERENCE_URL = 'https://docs.google.com/document/d/1chfDa3JBCjsGykGjwrAFwOqMAS7d3_dIY9ieROLCIyU/preview'
 YOUTUBE_URL = 'https://youtube.com/@GeezerGeekPilot'
 AIRPORTS_URL = CONTROL_PANEL_URL + 'airports/'   # Wayne's airports-visited map (v1.2)
+FEEDBACK_URL = CONTROL_PANEL_URL + 'feedback/'   # v1.5: shared feedback form (Netlify Forms), ?app=<APPS key>
+FEEDBACK_LABEL = 'Send feedback'
 
 SHARE_LABEL = 'Share GeezerGeek Pilot Apps with pilot friends'
 SHARE_TITLE = 'GeezerGeek Pilot Apps'
@@ -35,6 +37,8 @@ SHARE_ICON = ('<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="c
               'stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/>'
               '<circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/>'
               '<line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/></svg>')
+FEEDBACK_ICON = ('<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+                 'stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>')
 INSTALL_ICON = ('<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
                 'stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"/><polyline points="7 8 12 3 17 8"/>'
                 '<path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>')
@@ -43,9 +47,11 @@ INSTALL_ICON = ('<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke=
 # the apps keep counting silently in their own scripts). extras: app-specific links shown under the
 # back link. install: (button id, label) for an app that has its own install code.
 # repo: the repo folder, when the key is not the repo name (a second page in one repo).
+# feedback: show the Send feedback pill (default True); it opens FEEDBACK_URL?app=<key>.
 APPS = {
     # count_base: estimated opens before the Tally counter started (20-Oct-2026); added to the shown number.
     'geezer-geek-pilot-control-panel': dict(file='site/index.html', back=False, count=True, count_base=300, count_href='stats/',
+                                            feedback=False,   # v1.5: has its own button under the purpose line
                                             install=('installBtn', 'Add this app to Home Screen')),
     'weather-history-probability': dict(file='site/index.html'),
     'digital-autopilots-quiz': dict(file='site/index.html'),
@@ -63,6 +69,8 @@ APPS = {
                              credit_link=False),   # the page the credit links to
     # v1.4: open-counts page, linked from the Control Panel's "Opened N times" (Wayne, 02-Nov-2026)
     'open-counts': dict(repo='geezer-geek-pilot-control-panel', file='site/stats/index.html'),
+    # v1.5: the feedback form itself (Wayne, 07-Nov-2026)
+    'feedback': dict(repo='geezer-geek-pilot-control-panel', file='site/feedback/index.html', feedback=False),
 }
 
 CSS = f'''<!-- GGP-FOOTER-CSS START {VERSION} · shared footer styles, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
@@ -97,6 +105,7 @@ CSS = f'''<!-- GGP-FOOTER-CSS START {VERSION} · shared footer styles, App Conve
   border:1px solid var(--ggp-bezel-hi); border-radius:20px; background:transparent; color:var(--ggp-muted);
   font:inherit; font-size:12.5px; line-height:1.2; cursor:pointer; transition:color .15s ease, border-color .15s ease;
 }}
+.ggp-footer a.ggp-pill{{ text-decoration:none; }}
 .ggp-footer .ggp-pill:hover{{ color:var(--ggp-amber); border-color:var(--ggp-amber); background:transparent; }}
 .ggp-footer .ggp-pill svg{{ width:15px; height:15px; flex-shrink:0; }}
 .ggp-footer .ggp-pill span{{ text-wrap:balance; }}
@@ -188,6 +197,8 @@ def footer_html(cfg):
         lines.append(f'  <div class="ggp-count" id="ggpCount"{attr}></div>')
     lines.append('  <div class="ggp-actions">')
     lines.append(f'    <button class="ggp-pill ggp-share" type="button">{SHARE_ICON}<span>{SHARE_LABEL}</span></button>')
+    if cfg.get('feedback', True):
+        lines.append(f'    <a class="ggp-pill ggp-feedback" href="{FEEDBACK_URL}?app={cfg["key"]}">{FEEDBACK_ICON}<span>{FEEDBACK_LABEL}</span></a>')
     if cfg.get('install'):
         bid, label = cfg['install']
         lines.append(f'    <button class="ggp-pill" id="{bid}" type="button" style="display:none;">{INSTALL_ICON}<span>{label}</span></button>')
@@ -222,7 +233,7 @@ def main(argv):
             status = 1
             continue
         src = path.read_text(encoding='utf-8')
-        want = render(cfg)
+        want = render(dict(cfg, key=app))
         out = src
         problems = []
         for key, rx in BLOCKS:

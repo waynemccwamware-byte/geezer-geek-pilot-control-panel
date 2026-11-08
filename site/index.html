@@ -145,6 +145,21 @@
 
   .purpose-label { color: var(--text-primary); }
 
+  /* v1.16: feedback button under the purpose line (opens feedback/, a Netlify Form; App Conventions §5c) */
+  .purpose-line:has(+ .feedback-row) { margin-bottom: 10px; }
+  .feedback-row { margin: 0 4px 24px; }
+  .feedback-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 7px 14px; border: 1px solid var(--teal); border-radius: 20px;
+    color: var(--teal); background: transparent; text-decoration: none;
+    font: 500 12.5px 'IBM Plex Sans', sans-serif; line-height: 1.2;
+    transition: color .15s ease, border-color .15s ease;
+  }
+  .feedback-btn:hover { color: var(--amber); border-color: var(--amber); }
+  .feedback-btn:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  .feedback-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+  @media print { .feedback-row { display: none; } }
+
   .panel {
     margin-bottom: 28px;
     display: flex;
@@ -383,7 +398,7 @@
     .launch-btn { transition: none; }
   }
 </style>
-<!-- GGP-FOOTER-CSS START v1.4 · 02-Nov-2026 · shared footer styles, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
+<!-- GGP-FOOTER-CSS START v1.5 · 07-Nov-2026 · shared footer styles, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
 <style>
 .ggp-footer{
   --ggp-amber:#f5a623; --ggp-muted:#8b93a1; --ggp-bezel:#2a323f; --ggp-bezel-hi:#3a4454;
@@ -415,6 +430,7 @@
   border:1px solid var(--ggp-bezel-hi); border-radius:20px; background:transparent; color:var(--ggp-muted);
   font:inherit; font-size:12.5px; line-height:1.2; cursor:pointer; transition:color .15s ease, border-color .15s ease;
 }
+.ggp-footer a.ggp-pill{ text-decoration:none; }
 .ggp-footer .ggp-pill:hover{ color:var(--ggp-amber); border-color:var(--ggp-amber); background:transparent; }
 .ggp-footer .ggp-pill svg{ width:15px; height:15px; flex-shrink:0; }
 .ggp-footer .ggp-pill span{ text-wrap:balance; }
@@ -431,9 +447,12 @@
   <div class="rig">
     <div class="callsign-row">
       <h1><a class="title-link" href="qr.html" target="_blank" rel="noopener">GeezerGeek Pilot Apps</a></h1>
-      <span class="ver mono">v1.15</span>
+      <span class="ver mono">v1.16</span>
     </div>
     <p class="purpose-line">Some people spend their retirement volunteering at a food bank or the Red Cross&hellip; I fly doctors to Mexico and coach fellow pilots.</p>
+    <div class="feedback-row">
+      <a class="feedback-btn" href="feedback/?app=control-panel"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Feedback to the GeezerGeek</span></a>
+    </div>
 
     <div class="panel">
       <section class="app-group g-new is-new" aria-labelledby="grp-new" data-new-until="2026-12-30" data-after-label="Claude &amp; AI">
@@ -723,7 +742,7 @@
 
     <p class="disclaimer">Disclaimer: I am neither a ground instructor nor a flight instructor. All information is for general background and should be verified with a certified flight instructor and your own research.</p>
 
-    <!-- GGP-FOOTER START v1.4 · 02-Nov-2026 · shared footer, App Conventions §5a · master: Control Panel repo tools/ggp-footer -->
+    <!-- GGP-FOOTER START v1.5 · 07-Nov-2026 · shared footer, App Conventions §5a · master: Control Panel repo tools/ggp-footer -->
 <footer class="ggp-footer">
   <div class="ggp-credit">Wayne McClelland (<a href="https://geezer-geek-pilot-control-panel.netlify.app/airports/" target="_blank" rel="noopener">airports visited</a>), <a href="https://youtube.com/@GeezerGeekPilot" target="_blank" rel="noopener">GeezerGeek Pilot</a>, <a href="https://docs.google.com/document/d/1chfDa3JBCjsGykGjwrAFwOqMAS7d3_dIY9ieROLCIyU/preview" target="_blank" rel="noopener">Reference Materials</a></div>
   <div class="ggp-count" id="ggpCount" data-base="300" data-href="stats/"></div>
@@ -815,7 +834,7 @@
     }
   });
 </script>
-<!-- GGP-FOOTER-JS START v1.4 · 02-Nov-2026 · shared footer script, App Conventions §6a/§6b · master: Control Panel repo tools/ggp-footer -->
+<!-- GGP-FOOTER-JS START v1.5 · 07-Nov-2026 · shared footer script, App Conventions §6a/§6b · master: Control Panel repo tools/ggp-footer -->
 <script>
 (() => {
   if (window.__ggpFooter) return;

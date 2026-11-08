@@ -19,6 +19,9 @@ What the blocks do:
 - Only the Control Panel shows "Opened N times" (Tally, `wamware/geezer-geek-pilot-control-panel`).
   The apps keep their own counter code and count silently. Since v1.4 the count is a subtle link
   (`count_href`) to `site/stats/`, a public page that reads every app's counter without bumping it.
+- v1.5: a "Send feedback" pill opens the shared feedback form, `site/feedback/` in this repo
+  (Netlify Forms, form name `feedback`), with `?app=<APPS key>` so the form preselects the app.
+  The Control Panel itself has its own button under the purpose line instead (`feedback=False`).
 - The Control Panel maps the footer's colors to its light/dark tokens with one rule in its own CSS
   (`body .ggp-footer { --ggp-amber: var(--amber); … }`).
 
