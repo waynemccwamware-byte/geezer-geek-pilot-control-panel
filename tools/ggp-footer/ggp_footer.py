@@ -20,7 +20,7 @@ import re
 import sys
 from pathlib import Path
 
-VERSION = 'v1.10 · 08-Nov-2026'
+VERSION = 'v1.11 · 09-Nov-2026'
 
 CONTROL_PANEL_URL = 'https://geezer-geek-pilot-control-panel.netlify.app/'
 REFERENCE_URL = 'https://docs.google.com/document/d/1chfDa3JBCjsGykGjwrAFwOqMAS7d3_dIY9ieROLCIyU/preview'
@@ -31,7 +31,7 @@ AIRPORTS_URL = CONTROL_PANEL_URL + 'airports/'   # Wayne's airports-visited map 
 FEEDBACK_USER, FEEDBACK_DOMAIN = 'waynemcc', 'wamware.com'
 # v1.9: YouTube playlist of app intro videos (Wayne, 08-Nov-2026; playlist "GeezerGeek Pilot Apps", 4 videos when checked)
 VIDEOS_URL = 'https://www.youtube.com/playlist?list=PLZEU99ONr5bE'
-VIDEOS_LABEL = 'YouTube video intros to the apps'
+VIDEOS_LABEL = 'YouTube intros to the apps'
 FEEDBACK_LABEL = 'Feedback to GeezerGeek Pilot'   # v1.7: matches the Control Panel button
 
 SHARE_LABEL = 'Share GeezerGeek Pilot Apps with pilot friends'
