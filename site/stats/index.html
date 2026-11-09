@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="dark">
 <title>App Open Counts</title>
 <meta name="theme-color" content="#10141a">
-<meta name="description" content="How many times each GeezerGeek Pilot app has been opened.">
+<meta name="description" content="How many times each GeezerGeek Pilot app has been opened, and by how many visitors.">
 <link rel="icon" href="../icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,14 +26,18 @@ html{background:var(--bg-deep);color-scheme:dark;overscroll-behavior:none;scroll
 body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:center;overscroll-behavior:none;
   background:radial-gradient(ellipse at 50% 0%,#171d26 0%,var(--bg-deep) 60%);font-family:var(--sans);color:var(--text-primary);padding:40px 16px 32px}
 .mono{font-family:var(--mono)}
-.rig{width:100%;max-width:640px}
+.rig{width:100%;max-width:960px}
 .callsign-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:2px;padding:0 4px}
 .callsign-row h1{font-size:22px;font-weight:600;margin:0;letter-spacing:.01em}
 .callsign-row .ver{font-size:11px;color:var(--text-muted)}
 .purpose-line{font-size:13px;color:var(--teal);margin:6px 4px 24px;line-height:1.55}
 .purpose-label{color:var(--text-primary)}
 
-.panel{background:var(--bg-panel);border:1px solid var(--bezel);border-radius:8px;padding:6px 16px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+@media (max-width:720px){.cards{grid-template-columns:1fr}}
+.panel{background:var(--bg-panel);border:1px solid var(--bezel);border-radius:8px;padding:6px 16px;min-width:0}
+.panel h2{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin:10px 0 2px;display:flex;justify-content:space-between;align-items:baseline}
+.panel h2 .tot{font-family:var(--mono);letter-spacing:0;text-transform:none;color:var(--text-primary);font-weight:500}
 .row{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:12px 0;border-top:1px solid var(--bezel)}
 .row:first-child{border-top:0}
 .name{font-size:14px;font-weight:500;min-width:0}
@@ -105,14 +109,18 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
 </head>
 <body>
 <div class="rig">
-  <div class="callsign-row"><h1>App Open Counts</h1><span class="ver mono">v1.0</span></div>
-  <p class="purpose-line"><span class="purpose-label">Purpose:</span> How many times each GeezerGeek Pilot app has been opened, most-used first. Reading these numbers doesn't add to them.</p>
+  <div class="callsign-row"><h1>App Open Counts</h1><span class="ver mono">v1.1</span></div>
+  <p class="purpose-line"><span class="purpose-label">Purpose:</span> How many times each GeezerGeek Pilot app has been opened, and by how many visitors, each list most first. Reading these numbers doesn't add to them.</p>
 
-  <div class="panel" id="list" aria-live="polite"></div>
+  <div class="cards">
+    <section class="panel" aria-live="polite"><h2>Opened <span class="tot" id="totOpens"></span></h2><div id="listOpens"></div></section>
+    <section class="panel" aria-live="polite"><h2>Visitors <span class="tot" id="totVisitors"></span></h2><div id="listVisitors"></div></section>
+  </div>
 
   <div class="fine">
     <p>An “open” is one page load, including reloads and the author's own testing. Each app's counter started on a different date, so compare with that in mind.</p>
-    <p>“Visitors” counts distinct internet addresses (not people), and only the Tally counters report it.</p>
+    <p>“Visitors” counts distinct internet addresses (not people). Totals at the top of each card add up the rows; one person using several apps is counted in each.</p>
+    <p>Since 09-Nov-2026 every app counts on Tally. Fuel and Weather counted elsewhere before that: their opens carry the earlier count forward, but their visitors start from 09-Nov-2026. The Control Panel's opens include 300 estimated from before it had a counter.</p>
     <p>Read <span class="asof" id="asof">—</span>.</p>
   </div>
 </div>
@@ -131,69 +139,74 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
 
 <script>
 (() => {
-  const BASE_CP = 300;  // pre-counter estimate added to the Control Panel's shown count (App Conventions §6b)
-  const tally  = k => `https://tally.yuki.sh/hits/wamware/${k}.json?mode=read`;   // ?mode=read: no increment
-  // Each app, its counter, and its Control Panel group (for the color chip).
+  const tally = k => `https://tally.yuki.sh/hits/wamware/${k}.json?mode=read`;   // ?mode=read: no increment
+  // Each app's Tally key, Control Panel group (color chip), and `base`: opens counted before Tally, added to the
+  // shown opens only (App Conventions §6b). Visitors are Tally's alone. `since`: date visitor counting began, if later.
+  //   Control Panel 300 = estimate before it had any counter.
+  //   Fuel 65       = Abacus froze at 75 on the 09-Nov-2026 switch; Tally already held 10 stray hits, so 75 − 10.
+  //   Weather 385   = its own hit-counter function froze at 385 on the 09-Nov-2026 switch; Tally started at 0.
   const APPS = [
-    { name: 'GeezerGeek Pilot Apps (Control Panel)', url: '../', g: 'g-panel', src: 'Tally', read: tally('geezer-geek-pilot-control-panel'), base: BASE_CP },
-    { name: 'Claude + ForeFlight Primer',     url: 'https://claude-foreflight-primer.netlify.app/',    g: 'g-new',  src: 'Tally', read: tally('claude-foreflight-primer') },
-    { name: 'GA Accident Stats',              url: 'https://piston-ga-stats.netlify.app/',             g: 'g-safe', src: 'Tally', read: tally('piston-ga-stats') },
-    { name: 'Weather History and Probability', url: 'https://weather-history-probability.netlify.app/', g: 'g-wx',  src: 'own counter',
-      read: 'https://weather-history-probability.netlify.app/.netlify/functions/hit-counter?mode=read' },
-    { name: 'Know the Score(board)? – a Quiz', url: 'https://digital-autopilots-quiz.netlify.app/',     g: 'g-wx',   src: 'Tally', read: tally('digital-autopilots-quiz') },
-    { name: 'TEC Route Lookup',               url: 'https://tec-route-lookup.netlify.app/',            g: 'g-atc',  src: 'Tally', read: tally('tec-route-lookup') },
-    { name: 'Clearance Delivery Trainer',     url: 'https://clearance-delivery.netlify.app/',          g: 'g-atc',  src: 'Tally', read: tally('clearance-delivery') },
-    { name: 'ATC Chair-Fly Trainer',          url: 'https://atc-chair-fly-trainer.netlify.app/',       g: 'g-atc',  src: 'Tally', read: tally('atc-chair-fly-trainer') },
-    { name: "Day's Flight Schedule",          url: 'https://days-flight-schedule.netlify.app/',        g: 'g-plan', src: 'Tally', read: tally('days-flight-schedule') },
-    { name: 'How Much Fuel to Add?',          url: 'https://fuel-to-add.netlify.app/',                 g: 'g-plan', src: 'Abacus',
-      read: 'https://abacus.jasoncameron.dev/get/wamware/fuel-to-add' },                                // /get/: no increment
+    { name: 'GeezerGeek Pilot Apps (Control Panel)', url: '../', g: 'g-panel', key: 'geezer-geek-pilot-control-panel', base: 300 },
+    { name: 'Claude + ForeFlight Primer',      url: 'https://claude-foreflight-primer.netlify.app/',     g: 'g-new',  key: 'claude-foreflight-primer' },
+    { name: 'GA Accident Stats',               url: 'https://piston-ga-stats.netlify.app/',              g: 'g-safe', key: 'piston-ga-stats' },
+    { name: 'Weather History and Probability', url: 'https://weather-history-probability.netlify.app/',  g: 'g-wx',   key: 'weather-history-probability', base: 385, since: '09-Nov-2026' },
+    { name: 'Know the Score(board)? – a Quiz', url: 'https://digital-autopilots-quiz.netlify.app/',      g: 'g-wx',   key: 'digital-autopilots-quiz' },
+    { name: 'TEC Route Lookup',                url: 'https://tec-route-lookup.netlify.app/',             g: 'g-atc',  key: 'tec-route-lookup' },
+    { name: 'Clearance Delivery Trainer',      url: 'https://clearance-delivery.netlify.app/',           g: 'g-atc',  key: 'clearance-delivery' },
+    { name: 'ATC Chair-Fly Trainer',           url: 'https://atc-chair-fly-trainer.netlify.app/',        g: 'g-atc',  key: 'atc-chair-fly-trainer' },
+    { name: "Day's Flight Schedule",           url: 'https://days-flight-schedule.netlify.app/',         g: 'g-plan', key: 'days-flight-schedule' },
+    { name: 'How Much Fuel to Add?',           url: 'https://fuel-to-add.netlify.app/',                  g: 'g-plan', key: 'fuel-to-add', base: 65, since: '09-Nov-2026' },
   ];
 
-  const list = document.getElementById('list');
   const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fmt = n => n.toLocaleString();
 
-  // Draw the rows right away (in Control Panel order), then fill and re-sort as numbers arrive.
-  APPS.forEach(a => {
-    const row = document.createElement('div');
-    row.className = `row ${a.g}`;
-    row.innerHTML = `<div class="name"><a href="${a.url}">${esc(a.name)}</a></div>
-      <div class="opens">…</div><div class="bar"><i></i></div><div class="meta"></div>`;
-    a.row = row;
-    list.appendChild(row);
+  // One card per measure. Rows are drawn right away (Control Panel order), then filled and re-sorted.
+  const CARDS = [
+    { list: document.getElementById('listOpens'), tot: document.getElementById('totOpens'),
+      val: a => a.data ? a.data.visit + (a.base || 0) : null,
+      meta: a => a.base ? (a.since ? `includes ${fmt(a.base)} counted before ${a.since}` : `includes ${fmt(a.base)} estimated before counting began`) : '' },
+    { list: document.getElementById('listVisitors'), tot: document.getElementById('totVisitors'),
+      val: a => a.data && typeof a.data.visitor === 'number' ? a.data.visitor : null,
+      meta: a => a.since ? `since ${a.since}` : '' },
+  ];
+  CARDS.forEach(c => {
+    c.rows = new Map();
+    APPS.forEach(a => {
+      const row = document.createElement('div');
+      row.className = `row ${a.g}`;
+      row.innerHTML = `<div class="name"><a href="${a.url}">${esc(a.name)}</a></div>
+        <div class="opens">…</div><div class="bar"><i></i></div><div class="meta"></div>`;
+      c.rows.set(a, row);
+      c.list.appendChild(row);
+    });
   });
 
-  const parse = (a, d) => {
-    if (!d) return null;
-    if (a.src === 'Tally')  return typeof d.visit === 'number' ? { opens: d.visit, visitors: d.visitor } : null;
-    if (a.src === 'Abacus') return typeof d.value === 'number' ? { opens: d.value } : null;
-    return typeof d.count === 'number' ? { opens: d.count } : null;   // Weather's own function
-  };
-
   Promise.all(APPS.map(a =>
-    fetch(a.read, { cache: 'no-store' })
+    fetch(tally(a.key), { cache: 'no-store' })
       .then(r => r.ok ? r.json() : null)
-      .then(d => { a.data = parse(a, d); })
+      .then(d => { a.data = d && typeof d.visit === 'number' ? d : null; })
       .catch(() => { a.data = null; })
   )).then(() => {
-    const total = a => a.data ? a.data.opens + (a.base || 0) : -1;
-    const max = Math.max(1, ...APPS.map(total));
-    APPS.slice().sort((x, y) => total(y) - total(x)).forEach(a => {
-      const opens = a.row.querySelector('.opens'), meta = a.row.querySelector('.meta');
-      if (!a.data) {
-        opens.textContent = 'unavailable';
-        opens.classList.add('err');
-        meta.textContent = "Counter didn't answer";
-      } else {
-        const n = total(a);
-        opens.textContent = fmt(n);
-        const bits = [`${a.src}`];
-        if (typeof a.data.visitors === 'number') bits.push(`${fmt(a.data.visitors)} visitor${a.data.visitors === 1 ? '' : 's'}`);
-        if (a.base) bits.push(`includes ${fmt(a.base)} estimated before counting began`);
-        meta.textContent = bits.join(' · ');
-        requestAnimationFrame(() => { a.row.querySelector('.bar i').style.width = (100 * n / max).toFixed(1) + '%'; });
-      }
-      list.appendChild(a.row);   // re-append in sorted order
+    CARDS.forEach(c => {
+      const v = a => { const n = c.val(a); return n == null ? -1 : n; };
+      const max = Math.max(1, ...APPS.map(v));
+      let sum = 0;
+      APPS.slice().sort((x, y) => v(y) - v(x)).forEach(a => {
+        const row = c.rows.get(a), num = row.querySelector('.opens'), meta = row.querySelector('.meta');
+        const n = c.val(a);
+        if (n == null) {
+          num.textContent = 'unavailable'; num.classList.add('err');
+          meta.textContent = "Counter didn't answer";
+        } else {
+          sum += n;
+          num.textContent = fmt(n);
+          meta.textContent = c.meta(a);
+          requestAnimationFrame(() => { row.querySelector('.bar i').style.width = (100 * n / max).toFixed(1) + '%'; });
+        }
+        c.list.appendChild(row);   // re-append in sorted order
+      });
+      c.tot.textContent = fmt(sum);
     });
     const now = new Date();
     const mon = now.toLocaleString('en-US', { month: 'short' });
