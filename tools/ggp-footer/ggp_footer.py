@@ -20,7 +20,7 @@ import re
 import sys
 from pathlib import Path
 
-VERSION = 'v1.8 · 07-Nov-2026'
+VERSION = 'v1.9 · 08-Nov-2026'
 
 CONTROL_PANEL_URL = 'https://geezer-geek-pilot-control-panel.netlify.app/'
 REFERENCE_URL = 'https://docs.google.com/document/d/1chfDa3JBCjsGykGjwrAFwOqMAS7d3_dIY9ieROLCIyU/preview'
@@ -29,6 +29,9 @@ AIRPORTS_URL = CONTROL_PANEL_URL + 'airports/'   # Wayne's airports-visited map 
 # v1.6: feedback opens the user's email app (mailto) addressed to Wayne; the address is assembled in the
 # script, not written in the page, to keep it away from address scrapers. (v1.5's Netlify form retired.)
 FEEDBACK_USER, FEEDBACK_DOMAIN = 'waynemcc', 'wamware.com'
+# v1.9: YouTube playlist of app intro videos (Wayne, 08-Nov-2026; playlist "GeezerGeek Pilot Apps", 4 videos when checked)
+VIDEOS_URL = 'https://www.youtube.com/playlist?list=PLZEU99ONr5bE'
+VIDEOS_LABEL = 'YouTube Video intros to the apps'
 FEEDBACK_LABEL = 'Feedback to GeezerGeek Pilot'   # v1.7: matches the Control Panel button
 
 SHARE_LABEL = 'Share GeezerGeek Pilot Apps with pilot friends'
@@ -41,6 +44,9 @@ SHARE_ICON = ('<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="c
               '<line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/></svg>')
 FEEDBACK_ICON = ('<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
                  'stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>')
+VIDEOS_ICON = ('<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+               'stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="4"/>'
+               '<polygon points="10 9 15 12 10 15" fill="currentColor"/></svg>')
 INSTALL_ICON = ('<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
                 'stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"/><polyline points="7 8 12 3 17 8"/>'
                 '<path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>')
@@ -50,11 +56,12 @@ INSTALL_ICON = ('<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke=
 # back link. install: (button id, label) for an app that has its own install code.
 # repo: the repo folder, when the key is not the repo name (a second page in one repo).
 # feedback: show the Send feedback pill (default True); it opens an email to Wayne naming the app (label).
+# videos: show the YouTube intros pill (default True; off on the Control Panel, which has its own button).
 # label: the app's name as it should appear in the feedback email's subject.
 APPS = {
     # count_base: estimated opens before the Tally counter started (20-Oct-2026); added to the shown number.
     'geezer-geek-pilot-control-panel': dict(file='site/index.html', back=False, count=True, count_base=300, count_href='stats/',
-                                            feedback=False, label='GeezerGeek Pilot Apps',   # has its own feedback button under the purpose line
+                                            feedback=False, videos=False, label='GeezerGeek Pilot Apps',   # has its own feedback button under the purpose line
                                             install=('installBtn', 'Add this app to Home Screen')),
     'weather-history-probability': dict(file='site/index.html', label='Weather History and Probability'),
     'digital-autopilots-quiz': dict(file='site/index.html', label='Know the Score(board)? – a Quiz'),
@@ -240,6 +247,8 @@ def footer_html(cfg):
     if cfg.get('feedback', True):
         app = cfg.get('label', cfg['key']).replace('"', '&quot;')
         lines.append(f'    <button class="ggp-pill ggp-feedback" type="button" data-app="{app}">{FEEDBACK_ICON}<span>{FEEDBACK_LABEL}</span></button>')
+    if cfg.get('videos', True):
+        lines.append(f'    <a class="ggp-pill ggp-videos" href="{VIDEOS_URL}" target="_blank" rel="noopener">{VIDEOS_ICON}<span>{VIDEOS_LABEL}</span></a>')
     if cfg.get('install'):
         bid, label = cfg['install']
         lines.append(f'    <button class="ggp-pill" id="{bid}" type="button" style="display:none;">{INSTALL_ICON}<span>{label}</span></button>')
