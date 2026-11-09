@@ -23,7 +23,7 @@ What the blocks do:
   "GeezerGeek feedback: <label>" and an empty body (v1.8). If no email app opens, it shows the address with a Copy button.
   The address is assembled in the script, not written in the page. The Control Panel has its own
   button under the purpose line (class `ggp-feedback`, same handler) instead (`feedback=False`).
-- v1.9: a "YouTube Video intros to the apps" pill links to the GeezerGeek Pilot Apps playlist (new tab).
+- v1.9: a "YouTube video intros to the apps" pill links to the GeezerGeek Pilot Apps playlist (new tab).
   The Control Panel has its own button beside the feedback button instead (`videos=False`).
 - The Control Panel maps the footer's colors to its light/dark tokens with one rule in its own CSS
   (`body .ggp-footer { --ggp-amber: var(--amber); … }`).
