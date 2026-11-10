@@ -20,7 +20,7 @@ import re
 import sys
 from pathlib import Path
 
-VERSION = 'v1.11 · 09-Nov-2026'
+VERSION = 'v1.12 · 10-Nov-2026'
 
 CONTROL_PANEL_URL = 'https://geezer-geek-pilot-control-panel.netlify.app/'
 REFERENCE_URL = 'https://docs.google.com/document/d/1chfDa3JBCjsGykGjwrAFwOqMAS7d3_dIY9ieROLCIyU/preview'
@@ -58,6 +58,8 @@ INSTALL_ICON = ('<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke=
 # feedback: show the Send feedback pill (default True); it opens an email to Wayne naming the app (label).
 # videos: show the YouTube intros pill (default True; off on the Control Panel, which has its own button).
 # label: the app's name as it should appear in the feedback email's subject.
+# all_count: also hit the shared Tally counter wamware/ggp-all (default True), whose `visitor` is unique visitors
+#   across every app (v1.12, Wayne 10-Nov-2026). Off for pages that are not apps (the stats page, the airports map).
 APPS = {
     # count_base: estimated opens before the Tally counter started (20-Oct-2026); added to the shown number.
     'geezer-geek-pilot-control-panel': dict(file='site/index.html', back=False, count=True, count_base=300, count_href='stats/',
@@ -76,9 +78,9 @@ APPS = {
     'piston-ga-stats': dict(file='site/index.html', label='GA Accident Stats'),
     'claude-foreflight-primer': dict(file='site/index.html', label='Claude + ForeFlight Primer'),
     'airports-visited': dict(repo='geezer-geek-pilot-control-panel', file='site/airports/index.html', label='Airports Visited',
-                             credit_link=False),   # the page the credit links to
+                             credit_link=False, all_count=False),   # the page the credit links to
     # v1.4: open-counts page, linked from the Control Panel's "Opened N times" (Wayne, 02-Nov-2026)
-    'open-counts': dict(repo='geezer-geek-pilot-control-panel', file='site/stats/index.html', label='App Open Counts'),
+    'open-counts': dict(repo='geezer-geek-pilot-control-panel', file='site/stats/index.html', label='App Open Counts', all_count=False),
 }
 
 CSS = f'''<!-- GGP-FOOTER-CSS START {VERSION} · shared footer styles, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
@@ -200,6 +202,12 @@ JS = f'''<!-- GGP-FOOTER-JS START {VERSION} · shared footer script, App Convent
       host.appendChild(note);
     }}, 1500);
   }});
+  // v1.12: every app also hits one shared Tally counter, so its `visitor` = unique visitors across all apps
+  // (the Open Counts page shows it as "unique since 10-Nov-2026"). Pages that are not apps carry
+  // data-ggp-all="off" on their footer. The Quiz draws its footer later, so a missing footer still counts.
+  if (!document.querySelector('.ggp-footer[data-ggp-all="off"]')) {{
+    fetch('https://tally.yuki.sh/hits/wamware/ggp-all.json').catch(() => {{ /* never block the app */ }});
+  }}
   // Open counter: shown only where the footer has #ggpCount (the Control Panel). Apps count silently.
   const countEl = document.getElementById('ggpCount');
   if (countEl) {{
@@ -226,7 +234,7 @@ JS = f'''<!-- GGP-FOOTER-JS START {VERSION} · shared footer script, App Convent
 
 def footer_html(cfg):
     lines = [f'<!-- GGP-FOOTER START {VERSION} · shared footer, App Conventions §5a · master: Control Panel repo tools/ggp-footer -->',
-             '<footer class="ggp-footer">']
+             '<footer class="ggp-footer"' + ('' if cfg.get('all_count', True) else ' data-ggp-all="off"') + '>']
     if cfg.get('back', True):
         lines.append(f'  <div class="ggp-back"><a href="{CONTROL_PANEL_URL}">&larr; Back to GeezerGeek Pilot Apps</a></div>')
     for text, url in cfg.get('extras', []):

@@ -56,7 +56,7 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
 .fine p{margin:0 0 6px}
 .asof{font-family:var(--mono)}
 </style>
-<!-- GGP-FOOTER-CSS START v1.11 · 09-Nov-2026 · shared footer styles, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
+<!-- GGP-FOOTER-CSS START v1.12 · 10-Nov-2026 · shared footer styles, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
 <style>
 .ggp-footer{
   --ggp-amber:#f5a623; --ggp-muted:#8b93a1; --ggp-bezel:#2a323f; --ggp-bezel-hi:#3a4454;
@@ -109,24 +109,24 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
 </head>
 <body>
 <div class="rig">
-  <div class="callsign-row"><h1>App Open Counts</h1><span class="ver mono">v1.1</span></div>
+  <div class="callsign-row"><h1>App Open Counts</h1><span class="ver mono">v1.2</span></div>
   <p class="purpose-line"><span class="purpose-label">Purpose:</span> How many times each GeezerGeek Pilot app has been opened, and by how many visitors, each list most first. Reading these numbers doesn't add to them.</p>
 
   <div class="cards">
     <section class="panel" aria-live="polite"><h2>Opened <span class="tot" id="totOpens"></span></h2><div id="listOpens"></div></section>
-    <section class="panel" aria-live="polite"><h2>Visitors <span class="tot" id="totVisitors"></span></h2><div id="listVisitors"></div></section>
+    <section class="panel" aria-live="polite"><h2>Visitors <span class="tot" id="totVisitors" title="Distinct internet addresses across all the apps, counted once however many apps they opened"></span></h2><div id="listVisitors"></div></section>
   </div>
 
   <div class="fine">
     <p>An “open” is one page load, including reloads and the author's own testing. Each app's counter started on a different date, so compare with that in mind.</p>
-    <p>“Visitors” counts distinct internet addresses (not people). Totals at the top of each card add up the rows; one person using several apps is counted in each.</p>
+    <p>“Visitors” counts distinct internet addresses (not people). Each app's row counts an address once for that app, so someone using three apps appears in three rows. The total at the top of the Visitors card counts each address once across all the apps, from 10-Nov-2026 when that shared count began; the Opened total adds up the rows.</p>
     <p>Since 09-Nov-2026 every app counts on Tally. Fuel and Weather counted elsewhere before that: their opens carry the earlier count forward, but their visitors start from 09-Nov-2026. The Control Panel's opens include 300 estimated from before it had a counter.</p>
     <p>Read <span class="asof" id="asof">—</span>.</p>
   </div>
 </div>
 
-<!-- GGP-FOOTER START v1.11 · 09-Nov-2026 · shared footer, App Conventions §5a · master: Control Panel repo tools/ggp-footer -->
-<footer class="ggp-footer">
+<!-- GGP-FOOTER START v1.12 · 10-Nov-2026 · shared footer, App Conventions §5a · master: Control Panel repo tools/ggp-footer -->
+<footer class="ggp-footer" data-ggp-all="off">
   <div class="ggp-back"><a href="https://geezer-geek-pilot-control-panel.netlify.app/">&larr; Back to GeezerGeek Pilot Apps</a></div>
   <div class="ggp-credit">Wayne McClelland (<a href="https://geezer-geek-pilot-control-panel.netlify.app/airports/" target="_blank" rel="noopener">airports visited</a>), <a href="https://youtube.com/@GeezerGeekPilot" target="_blank" rel="noopener">GeezerGeek Pilot</a>, <a href="https://docs.google.com/document/d/1chfDa3JBCjsGykGjwrAFwOqMAS7d3_dIY9ieROLCIyU/preview" target="_blank" rel="noopener">Reference Materials</a></div>
   <div class="ggp-actions">
@@ -139,6 +139,7 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
 
 <script>
 (() => {
+  const UNIQUE_SINCE = '10-Nov-2026';   // the day the shared ggp-all counter went live (footer v1.12)
   const tally = k => `https://tally.yuki.sh/hits/wamware/${k}.json?mode=read`;   // ?mode=read: no increment
   // Each app's Tally key, Control Panel group (color chip), and `base`: opens counted before Tally, added to the
   // shown opens only (App Conventions §6b). Visitors are Tally's alone. `since`: date visitor counting began, if later.
@@ -206,8 +207,16 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
         }
         c.list.appendChild(row);   // re-append in sorted order
       });
-      c.tot.textContent = fmt(sum);
+      if (c.tot.id === 'totOpens') c.tot.textContent = fmt(sum);
     });
+    // Visitors header: unique across all apps, from the shared Tally counter every app also hits (footer v1.12).
+    fetch(tally('ggp-all'), { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d && typeof d.visitor === 'number')
+          document.getElementById('totVisitors').textContent = `${fmt(d.visitor)} unique since ${UNIQUE_SINCE}`;
+      })
+      .catch(() => { /* leave the header blank rather than show a misleading sum */ });
     const now = new Date();
     const mon = now.toLocaleString('en-US', { month: 'short' });
     document.getElementById('asof').textContent =
@@ -215,7 +224,7 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
   });
 })();
 </script>
-<!-- GGP-FOOTER-JS START v1.11 · 09-Nov-2026 · shared footer script, App Conventions §6a/§6b · master: Control Panel repo tools/ggp-footer -->
+<!-- GGP-FOOTER-JS START v1.12 · 10-Nov-2026 · shared footer script, App Conventions §6a/§6b · master: Control Panel repo tools/ggp-footer -->
 <script>
 (() => {
   if (window.__ggpFooter) return;
@@ -283,6 +292,12 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
       host.appendChild(note);
     }, 1500);
   });
+  // v1.12: every app also hits one shared Tally counter, so its `visitor` = unique visitors across all apps
+  // (the Open Counts page shows it as "unique since 10-Nov-2026"). Pages that are not apps carry
+  // data-ggp-all="off" on their footer. The Quiz draws its footer later, so a missing footer still counts.
+  if (!document.querySelector('.ggp-footer[data-ggp-all="off"]')) {
+    fetch('https://tally.yuki.sh/hits/wamware/ggp-all.json').catch(() => { /* never block the app */ });
+  }
   // Open counter: shown only where the footer has #ggpCount (the Control Panel). Apps count silently.
   const countEl = document.getElementById('ggpCount');
   if (countEl) {

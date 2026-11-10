@@ -91,7 +91,7 @@ body.embed .mapbox{height:calc(100vh - 168px)}
 body.embed .panel{margin-top:8px}
 .ripple{fill:none;stroke:#f5a623;pointer-events:none}
 </style>
-<!-- GGP-FOOTER-CSS START v1.11 · 09-Nov-2026 · shared footer styles, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
+<!-- GGP-FOOTER-CSS START v1.12 · 10-Nov-2026 · shared footer styles, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
 <style>
 .ggp-footer{
   --ggp-amber:#f5a623; --ggp-muted:#8b93a1; --ggp-bezel:#2a323f; --ggp-bezel-hi:#3a4454;
@@ -169,8 +169,8 @@ body.embed .panel{margin-top:8px}
   <div class="card panel empty" id="panel">Tap a pin for airport details.</div>
   <p class="fine">Data: Wayne's ForeFlight logbook (departure, destination and airports in the Route field), simulator sessions left out; snapshot of 30-Oct-2026. Names and coordinates from ForeFlight, or from the OurAirports database where ForeFlight's logbook lookup had none.</p>
 </div>
-<!-- GGP-FOOTER START v1.11 · 09-Nov-2026 · shared footer, App Conventions §5a · master: Control Panel repo tools/ggp-footer -->
-<footer class="ggp-footer">
+<!-- GGP-FOOTER START v1.12 · 10-Nov-2026 · shared footer, App Conventions §5a · master: Control Panel repo tools/ggp-footer -->
+<footer class="ggp-footer" data-ggp-all="off">
   <div class="ggp-back"><a href="https://geezer-geek-pilot-control-panel.netlify.app/">&larr; Back to GeezerGeek Pilot Apps</a></div>
   <div class="ggp-credit">Wayne McClelland, <a href="https://youtube.com/@GeezerGeekPilot" target="_blank" rel="noopener">GeezerGeek Pilot</a>, <a href="https://docs.google.com/document/d/1chfDa3JBCjsGykGjwrAFwOqMAS7d3_dIY9ieROLCIyU/preview" target="_blank" rel="noopener">Reference Materials</a></div>
   <div class="ggp-actions">
@@ -405,7 +405,7 @@ if(qs.has('tour')){
 }catch(err){showErr(err)}
 })();
 </script>
-<!-- GGP-FOOTER-JS START v1.11 · 09-Nov-2026 · shared footer script, App Conventions §6a/§6b · master: Control Panel repo tools/ggp-footer -->
+<!-- GGP-FOOTER-JS START v1.12 · 10-Nov-2026 · shared footer script, App Conventions §6a/§6b · master: Control Panel repo tools/ggp-footer -->
 <script>
 (() => {
   if (window.__ggpFooter) return;
@@ -473,6 +473,12 @@ if(qs.has('tour')){
       host.appendChild(note);
     }, 1500);
   });
+  // v1.12: every app also hits one shared Tally counter, so its `visitor` = unique visitors across all apps
+  // (the Open Counts page shows it as "unique since 10-Nov-2026"). Pages that are not apps carry
+  // data-ggp-all="off" on their footer. The Quiz draws its footer later, so a missing footer still counts.
+  if (!document.querySelector('.ggp-footer[data-ggp-all="off"]')) {
+    fetch('https://tally.yuki.sh/hits/wamware/ggp-all.json').catch(() => { /* never block the app */ });
+  }
   // Open counter: shown only where the footer has #ggpCount (the Control Panel). Apps count silently.
   const countEl = document.getElementById('ggpCount');
   if (countEl) {
