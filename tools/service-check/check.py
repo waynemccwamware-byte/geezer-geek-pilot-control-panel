@@ -39,8 +39,6 @@ COUNTERS = list(APPS) + ['ggp-all']   # ggp-all: shared counter, its visitor = u
 # Outside sources (a small ranged GET, so big files aren't downloaded)
 UPSTREAMS = [
     ('FAA preferred routes CSV (TEC Route Lookup)', 'https://www.fly.faa.gov/rmt/data_file/prefroutes_db.csv'),
-    ('FAA NASR subscription page (Clearance Delivery FAA update)',
-     'https://www.faa.gov/air_traffic/flight_info/aeronav/aero_data/NASR_Subscription/'),
     ('NOAA GHCNh station list (Weather)',
      'https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/doc/ghcnh-station-list.csv'),
     ('jsPDF on jsDelivr (Day\'s Flight Schedule PDF)', 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'),
@@ -126,6 +124,11 @@ def main(argv):
         if until and until < today.isoformat():
             ok, detail = False, f"FAA frequency cycle ended {until}: press Update FAA data in Clearance Delivery"
     add('App functions', 'Clearance Delivery (nasr-freq)', ok, detail)
+    # The FAA file that function downloads. (www.faa.gov itself answers 403 to GitHub's servers, so it
+    # can't be checked from here; the function reads it from Netlify without trouble.)
+    if meta.get('source'):
+        status, _ = get(meta['source'], ranged=True)
+        add('Outside sources', 'FAA NASR frequency file, current cycle (Clearance Delivery)', status in (200, 206), f'HTTP {status}')
 
     # 4. outside sources
     for name, url in UPSTREAMS:

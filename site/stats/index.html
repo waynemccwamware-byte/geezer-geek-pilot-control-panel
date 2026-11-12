@@ -52,6 +52,34 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
 .g-panel{--g:var(--amber)} .g-new{--g:#f2c94c} .g-wx{--g:#4d94f0} .g-atc{--g:#f5a623} .g-plan{--g:#3fa7a0} .g-safe{--g:#e2685c}
 @media (prefers-reduced-motion:reduce){.bar i{transition:none}}
 
+/* v1.3: daily history (readings from the data branch, written by the daily service check) */
+.hist{margin-top:16px;padding-bottom:12px}
+.hist-ctrl{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:10px 0 6px}
+.hist-ctrl select{background:var(--bg-deep);color:var(--text-primary);border:1px solid var(--bezel-hi);border-radius:5px;padding:5px 8px;font:13px var(--sans);max-width:100%}
+.seg{display:inline-flex;border:1px solid var(--bezel-hi);border-radius:5px;overflow:hidden}
+.seg button{background:transparent;border:0;color:var(--text-muted);font:12.5px var(--sans);padding:5px 12px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--bezel-hi)}
+.seg button[aria-pressed="true"]{background:var(--bezel);color:var(--text-primary)}
+.hist-sum{font-size:12px;color:var(--text-muted);margin-left:auto}
+.hist-sum b{font-family:var(--mono);color:var(--text-primary);font-weight:500}
+.chart{position:relative;width:100%}
+.chart svg{display:block;width:100%;height:220px;overflow:visible}
+.chart .grid line{stroke:var(--bezel);stroke-width:1}
+.chart .ax{fill:var(--text-muted);font:10.5px var(--mono)}
+.chart rect.b{fill:var(--hc,var(--amber));opacity:.85}
+.chart rect.b.part{opacity:.4}
+.chart rect.hit{fill:transparent;cursor:default}
+.chart rect.hit:hover + rect.b, .chart g.on rect.b{opacity:1}
+.tip{position:absolute;pointer-events:none;background:#0c1015;border:1px solid var(--bezel-hi);border-radius:5px;padding:6px 9px;font-size:12px;line-height:1.4;white-space:nowrap;transform:translate(-50%,-100%);margin-top:-8px;display:none;z-index:2}
+.tip b{font-family:var(--mono);color:var(--text-primary)}
+.tip span{color:var(--text-muted)}
+.hist-empty{font-size:12.5px;color:var(--text-muted);padding:28px 0;text-align:center}
+.hist details{margin-top:6px;font-size:12px;color:var(--text-muted)}
+.hist summary{cursor:pointer}
+.hist table{border-collapse:collapse;margin-top:6px;font-size:12px}
+.hist td,.hist th{padding:3px 14px 3px 0;text-align:left;border-bottom:1px solid var(--bezel)}
+.hist td.n{font-family:var(--mono);text-align:right;color:var(--text-primary)}
+
 .fine{font-size:11.5px;color:var(--text-muted);line-height:1.55;margin:14px 4px 0}
 .fine p{margin:0 0 6px}
 .asof{font-family:var(--mono)}
@@ -109,7 +137,7 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
 </head>
 <body>
 <div class="rig">
-  <div class="callsign-row"><h1>App Open Counts</h1><span class="ver mono">v1.2</span></div>
+  <div class="callsign-row"><h1>App Open Counts</h1><span class="ver mono">v1.3</span></div>
   <p class="purpose-line"><span class="purpose-label">Purpose:</span> How many times each GeezerGeek Pilot app has been opened, and by how many visitors, each list most first. Reading these numbers doesn't add to them.</p>
 
   <div class="cards">
@@ -117,10 +145,24 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
     <section class="panel" aria-live="polite"><h2>Visitors <span class="tot" id="totVisitors" title="Distinct internet addresses across all the apps, counted once however many apps they opened"></span></h2><div id="listVisitors"></div></section>
   </div>
 
+  <section class="panel hist" aria-labelledby="histH">
+    <h2 id="histH">Per day <span class="tot" id="histRange"></span></h2>
+    <div class="hist-ctrl">
+      <select id="histApp" aria-label="Which app"></select>
+      <div class="seg" role="group" aria-label="Measure">
+        <button type="button" data-m="0" aria-pressed="true">Opens</button><button type="button" data-m="1" aria-pressed="false">New visitors</button>
+      </div>
+      <div class="hist-sum" id="histSum"></div>
+    </div>
+    <div class="chart" id="histChart"><div class="hist-empty">Loading history…</div></div>
+    <details><summary>Show as a table</summary><div id="histTable"></div></details>
+  </section>
+
   <div class="fine">
     <p>An “open” is one page load, including reloads and the author's own testing. Each app's counter started on a different date, so compare with that in mind.</p>
     <p>“Visitors” counts distinct internet addresses (not people). Each app's row counts an address once for that app, so someone using three apps appears in three rows. The total at the top of the Visitors card counts each address once across all the apps, from 10-Nov-2026 when that shared count began; the Opened total adds up the rows.</p>
     <p>Since 09-Nov-2026 every app counts on Tally. Fuel and Weather counted elsewhere before that: their opens carry the earlier count forward, but their visitors start from 09-Nov-2026. The Control Panel's opens include 300 estimated from before it had a counter.</p>
+    <p>“Per day” comes from a reading of every counter taken each night just after midnight Pacific time by the daily service check (history from 12-Nov-2026; the first day is partial). A day's bar is the increase between two readings. “New visitors” is the day's increase in distinct addresses: people seen for the first time, not everyone who visited that day. A faded bar covers less than a full day; a missed reading folds its days into the next bar.</p>
     <p>Read <span class="asof" id="asof">—</span>.</p>
   </div>
 </div>
@@ -222,6 +264,120 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
     document.getElementById('asof').textContent =
       `${String(now.getDate()).padStart(2, '0')}-${mon}-${now.getFullYear()} ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
   });
+})();
+</script>
+<script>
+/* v1.3: daily history chart. Readings: history.json on the repo's `data` branch (not deployed; no Netlify build). */
+(() => {
+  const HIST_URL = 'https://raw.githubusercontent.com/waynemccwamware-byte/geezer-geek-pilot-control-panel/data/history.json';
+  const APPS = [   // same keys, names and group colors as the cards above
+    ['geezer-geek-pilot-control-panel', 'GeezerGeek Pilot Apps (Control Panel)', '#f5a623'],
+    ['claude-foreflight-primer', 'Claude + ForeFlight Primer', '#f2c94c'],
+    ['piston-ga-stats', 'GA Accident Stats', '#e2685c'],
+    ['weather-history-probability', 'Weather History and Probability', '#4d94f0'],
+    ['digital-autopilots-quiz', 'Know the Score(board)? – a Quiz', '#4d94f0'],
+    ['tec-route-lookup', 'TEC Route Lookup', '#f5a623'],
+    ['clearance-delivery', 'Clearance Delivery Trainer', '#f5a623'],
+    ['atc-chair-fly-trainer', 'ATC Chair-Fly Trainer', '#f5a623'],
+    ['days-flight-schedule', "Day's Flight Schedule", '#3fa7a0'],
+    ['fuel-to-add', 'How Much Fuel to Add?', '#3fa7a0'],
+  ];
+  const $ = id => document.getElementById(id);
+  const sel = $('histApp'), chart = $('histChart'), table = $('histTable');
+  sel.innerHTML = '<option value="">All apps</option>' + APPS.map(([k, n]) => `<option value="${k}">${n.replace(/&/g, '&amp;')}</option>`).join('');
+  let rows = [], measure = 0;
+
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const pt = d => new Date(d.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));   // wall clock in California
+  const dayOf = t => { const d = pt(new Date(t.getTime() - 2 * 3600e3)); return `${String(d.getDate()).padStart(2, '0')}-${MON[d.getMonth()]}-${d.getFullYear()}`; };
+  const short = s => s.slice(0, 6);
+  const clock = t => pt(t).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+  // value of one reading for the current app + measure
+  function val(r) {
+    const k = sel.value;
+    if (k) { const c = r.c[k]; return c ? c[measure] : null; }
+    if (measure === 1) return r.c['ggp-all'] ? r.c['ggp-all'][1] : null;   // unique across all apps
+    let sum = 0;
+    for (const [key] of APPS) { if (!r.c[key]) return null; sum += r.c[key][0]; }
+    return sum;
+  }
+
+  function bars() {
+    const out = [];
+    for (let i = 1; i < rows.length; i++) {
+      const a = val(rows[i - 1]), b = val(rows[i]);
+      const hrs = (rows[i].t - rows[i - 1].t) / 3600e3;
+      out.push({ day: dayOf(rows[i].t), from: rows[i - 1].t, to: rows[i].t, hrs,
+        v: a == null || b == null || b < a ? null : b - a, part: hrs < 20, multi: hrs > 30 });
+    }
+    return out;
+  }
+
+  function draw() {
+    const color = (APPS.find(a => a[0] === sel.value) || [, , '#f5a623'])[2];
+    const B = bars(), what = measure ? 'new visitors' : 'opens';
+    if (!B.length) {
+      chart.innerHTML = `<div class="hist-empty">History starts ${rows.length ? dayOf(rows[0].t) : '12-Nov-2026'}. The first bar appears after the next nightly reading.</div>`;
+      $('histSum').textContent = ''; table.innerHTML = ''; $('histRange').textContent = '';
+      return;
+    }
+    $('histRange').textContent = `${B[0].day} to ${B[B.length - 1].day}`;
+    const known = B.filter(b => b.v != null), total = known.reduce((s, b) => s + b.v, 0);
+    const full = known.filter(b => !b.part), fullDays = full.reduce((s, b) => s + Math.max(1, Math.round(b.hrs / 24)), 0);
+    $('histSum').innerHTML = `<b>${total.toLocaleString()}</b> ${what} since ${B[0].day}` +
+      (fullDays ? `, <b>${Math.round(full.reduce((s, b) => s + b.v, 0) / fullDays).toLocaleString()}</b> a day` : '');
+
+    const W = Math.max(300, chart.clientWidth), H = 220, L = 34, R = 4, T = 10, Bm = 22;
+    const max = Math.max(1, ...known.map(b => b.v));
+    const step = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000].find(s => max / s <= 4) || Math.ceil(max / 4);
+    const top = Math.ceil(max / step) * step, y = v => T + (H - T - Bm) * (1 - v / top);
+    const slot = (W - L - R) / B.length, bw = Math.max(2, Math.min(28, slot - 2));
+    const every = Math.ceil(B.length / Math.floor((W - L) / 54));
+    let g = '<g class="grid">';
+    for (let v = 0; v <= top; v += step) g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text class="ax" x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end">${v}</text>`;
+    g += '</g>';
+    let m = '';
+    B.forEach((b, i) => {
+      const cx = L + slot * (i + .5);
+      if (b.v != null) {
+        const h = Math.max(b.v ? 2 : 0, y(0) - y(b.v));
+        m += `<g data-i="${i}"><rect class="hit" x="${L + slot * i}" y="${T}" width="${slot}" height="${H - T - Bm}"/>` +
+          `<rect class="b${b.part ? ' part' : ''}" x="${cx - bw / 2}" y="${y(0) - h}" width="${bw}" height="${h}" rx="${Math.min(4, bw / 2)}"/></g>`;
+      }
+      if (i % every === 0) m += `<text class="ax" x="${cx}" y="${H - 6}" text-anchor="middle">${short(b.day)}</text>`;
+    });
+    chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="--hc:${color}" role="img" aria-label="${what} per day">${g}${m}</svg><div class="tip"></div>`;
+    const tip = chart.querySelector('.tip');
+    chart.querySelectorAll('g[data-i]').forEach(el => {
+      const b = B[+el.dataset.i];
+      const show = () => {
+        const note = b.part ? `<br><span>partial: ${clock(b.from)} to ${clock(b.to)}</span>` : b.multi ? `<br><span>covers ${Math.round(b.hrs / 24)} days (a reading was missed)</span>` : '';
+        tip.innerHTML = `${b.day}<br><b>${b.v.toLocaleString()}</b> <span>${what}</span>${note}`;
+        const r = el.querySelector('.b').getBoundingClientRect(), c = chart.getBoundingClientRect();
+        tip.style.left = Math.min(c.width - 70, Math.max(70, r.left - c.left + r.width / 2)) + 'px';
+        tip.style.top = (r.top - c.top) + 'px'; tip.style.display = 'block'; el.classList.add('on');
+      };
+      const hide = () => { tip.style.display = 'none'; el.classList.remove('on'); };
+      el.addEventListener('pointerenter', show); el.addEventListener('pointerleave', hide);
+      el.addEventListener('click', show);
+    });
+    table.innerHTML = `<table><tr><th>Day</th><th>${what[0].toUpperCase() + what.slice(1)}</th></tr>` +
+      B.slice().reverse().map(b => `<tr><td>${b.day}${b.part ? ' (partial)' : ''}</td><td class="n">${b.v == null ? '—' : b.v.toLocaleString()}</td></tr>`).join('') + '</table>';
+  }
+
+  sel.addEventListener('change', draw);
+  document.querySelectorAll('.seg button').forEach(btn => btn.addEventListener('click', () => {
+    measure = +btn.dataset.m;
+    document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', String(x === btn)));
+    draw();
+  }));
+  let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(draw, 150); });
+
+  fetch(HIST_URL, { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    .then(h => { rows = (h.rows || []).map(r => ({ t: new Date(r.t.replace(/Z$/, ':00Z')), c: r.c })).sort((a, b) => a.t - b.t); draw(); })
+    .catch(() => { chart.innerHTML = '<div class="hist-empty">Daily history unavailable right now.</div>'; });
 })();
 </script>
 <!-- GGP-FOOTER-JS START v1.13 · 12-Nov-2026 · shared footer script, App Conventions §6a/§6b · master: Control Panel repo tools/ggp-footer -->
