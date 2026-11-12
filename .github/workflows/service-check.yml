@@ -1,0 +1,76 @@
+# Daily check of every GeezerGeek Pilot app and the outside services they depend on, plus a daily
+# reading of every open counter for the history chart on the Open Counts page (site/stats/).
+#
+# - Runs at 08:07 UTC (00:07 PST / 01:07 PDT), so each reading closes a calendar day in California.
+#   GitHub may start scheduled runs some minutes late.
+# - Counter history goes to history.json on the `data` branch, NOT main, so it never triggers a
+#   Netlify deploy. The stats page reads it from raw.githubusercontent.com.
+# - Any failed check opens (or comments on) one GitHub issue labeled service-check, which GitHub
+#   emails to the repo owner. The next all-clear run closes it.
+# - Run it by hand: repo > Actions > "Daily service check" > Run workflow (also records a reading).
+name: Daily service check
+
+on:
+  schedule:
+    - cron: '7 8 * * *'
+  workflow_dispatch:
+  push:   # a change to the check itself runs it once (checks only, no reading recorded)
+    branches: [main]
+    paths: ['.github/workflows/service-check.yml', 'tools/service-check/**']
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency: service-check
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        if: github.event_name != 'push'
+        with:
+          ref: data
+          path: data
+
+      - name: Check apps and services
+        id: check
+        continue-on-error: true
+        run: |
+          args=""
+          if [ "${{ github.event_name }}" != "push" ]; then args="--history data/history.json"; fi
+          python3 tools/service-check/check.py $args | tee report.md
+          exit ${PIPESTATUS[0]}
+
+      - name: Save the counter reading
+        if: github.event_name != 'push'
+        working-directory: data
+        run: |
+          git config user.name "GeezerGeek service check"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add history.json
+          git diff --cached --quiet || git commit -q -m "Counter reading $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -q origin HEAD:data
+
+      - name: Report
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OUTCOME: ${{ steps.check.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+          gh label create service-check --color d93f0b --description "Daily service check" 2>/dev/null || true
+          open=$(gh issue list --label service-check --state open --json number --jq '.[0].number')
+          if [ "$OUTCOME" = "failure" ]; then
+            { echo "Daily service check failed $(date -u '+%d-%b-%Y %H:%M UTC'). [Run log]($RUN_URL)"; echo; cat report.md; } > body.md
+            if [ -n "$open" ]; then gh issue comment "$open" --body-file body.md
+            else gh issue create --title "GeezerGeek service check failed" --label service-check --body-file body.md; fi
+            exit 1
+          elif [ -n "$open" ]; then
+            gh issue close "$open" --comment "All checks passed $(date -u '+%d-%b-%Y %H:%M UTC'). [Run log]($RUN_URL)"
+          fi
