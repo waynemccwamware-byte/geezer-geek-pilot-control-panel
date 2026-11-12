@@ -20,7 +20,7 @@ import re
 import sys
 from pathlib import Path
 
-VERSION = 'v1.12 · 10-Nov-2026'
+VERSION = 'v1.13 · 12-Nov-2026'
 
 CONTROL_PANEL_URL = 'https://geezer-geek-pilot-control-panel.netlify.app/'
 REFERENCE_URL = 'https://docs.google.com/document/d/1chfDa3JBCjsGykGjwrAFwOqMAS7d3_dIY9ieROLCIyU/preview'
@@ -206,12 +206,14 @@ JS = f'''<!-- GGP-FOOTER-JS START {VERSION} · shared footer script, App Convent
   // (the Open Counts page shows it as "unique since 10-Nov-2026"). Pages that are not apps carry
   // data-ggp-all="off" on their footer. The Quiz draws its footer later, so a missing footer still counts.
   if (!document.querySelector('.ggp-footer[data-ggp-all="off"]')) {{
-    fetch('https://tally.yuki.sh/hits/wamware/ggp-all.json').catch(() => {{ /* never block the app */ }});
+    fetch('https://tally.yuki.sh/counters/wamware/ggp-all', {{ method: 'POST' }}).catch(() => {{ /* never block the app */ }});
   }}
   // Open counter: shown only where the footer has #ggpCount (the Control Panel). Apps count silently.
   const countEl = document.getElementById('ggpCount');
   if (countEl) {{
-    fetch('https://tally.yuki.sh/hits/wamware/geezer-geek-pilot-control-panel.json')
+    // v1.13: Tally (now "Tallyflare") moved to /counters/<ns>/<key>: POST records a visit and returns the
+    // counts, GET only reads. The old hits URLs return 404 since ~11-Nov-2026; counts carried over.
+    fetch('https://tally.yuki.sh/counters/wamware/geezer-geek-pilot-control-panel', {{ method: 'POST' }})
       .then(r => r.json())
       .then(d => {{
         const base = parseInt(countEl.dataset.base, 10) || 0;  // pre-Tally opens, App Conventions §6b
