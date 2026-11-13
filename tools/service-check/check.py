@@ -55,7 +55,7 @@ def get(url, ranged=False, tries=2):
             headers['Range'] = 'bytes=0-2047'
         try:
             with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=45) as r:
-                return r.status, r.read(400_000).decode('utf-8', 'replace')
+                return r.status, r.read(2_000_000).decode('utf-8', 'replace')
         except urllib.error.HTTPError as e:
             last = (e.code, '')
         except Exception as e:   # timeout, DNS, TLS
