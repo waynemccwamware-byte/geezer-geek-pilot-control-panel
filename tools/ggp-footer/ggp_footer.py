@@ -20,10 +20,12 @@ import re
 import sys
 from pathlib import Path
 
-VERSION = 'v1.13 · 12-Nov-2026'
+VERSION = 'v1.14 · 13-Nov-2026'
 
 CONTROL_PANEL_URL = 'https://geezer-geek-pilot-control-panel.netlify.app/'
-REFERENCE_URL = 'https://docs.google.com/document/d/1chfDa3JBCjsGykGjwrAFwOqMAS7d3_dIY9ieROLCIyU/preview'
+# v1.14: the Control Panel's /reference function serves the Reference Materials Doc as an inline PDF
+# (print layout, light pages, stays out of the Google Docs app on iPhone) — Wayne, 13-Nov-2026
+REFERENCE_URL = CONTROL_PANEL_URL + 'reference'
 YOUTUBE_URL = 'https://youtube.com/@GeezerGeekPilot'
 AIRPORTS_URL = CONTROL_PANEL_URL + 'airports/'   # Wayne's airports-visited map (v1.2)
 # v1.6: feedback opens the user's email app (mailto) addressed to Wayne; the address is assembled in the
