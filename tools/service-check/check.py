@@ -83,9 +83,11 @@ def main(argv):
     # 1. app pages
     for key, url in APPS.items():
         status, body = get(url)
-        ok = status == 200 and 'ggp-footer' in body
+        # footer v1.14: its Reference Materials link goes to the Control Panel's /reference PDF
+        ok = status == 200 and 'ggp-footer' in body and 'control-panel.netlify.app/reference"' in body
         add('Apps', url.split('//')[1].split('.')[0], ok,
-            f'HTTP {status}' + ('' if ok or status != 200 else ', page loaded but the shared footer is missing'))
+            f'HTTP {status}' + ('' if ok or status != 200 else
+                                ', page loaded but the shared footer (v1.14+, Reference Materials PDF link) is missing'))
 
     # 2. Tally counters (also the history snapshot)
     snapshot = {}
