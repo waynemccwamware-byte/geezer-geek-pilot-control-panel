@@ -3,3 +3,7 @@
 [build]
   publish = "site"
   command = ""
+
+# v1.23: Netlify functions (reference.mjs serves the Reference Materials Doc as an inline PDF at /reference)
+[functions]
+  directory = "netlify/functions"
