@@ -133,6 +133,11 @@ def main(argv):
     ok = status == 200 and body.startswith('%PDF')
     add('App functions', 'Control Panel (reference: Reference Materials as PDF)', ok,
         'PDF served' if ok else f'HTTP {status}, not a PDF (export failed, fell back to /preview?)')
+    # v1.24: the installed Control Panel app opens it from the main-branch alias (another host, so iOS leaves the app)
+    status, body = get('https://main--geezer-geek-pilot-control-panel.netlify.app/reference')
+    ok = status == 200 and body.startswith('%PDF')
+    add('App functions', 'Control Panel (reference via main-- alias, used by the home-screen app)', ok,
+        'PDF served' if ok else f'HTTP {status}, not a PDF')
     # The FAA file that function downloads. (www.faa.gov itself answers 403 to GitHub's servers, so it
     # can't be checked from here; the function reads it from Netlify without trouble.)
     if meta.get('source'):

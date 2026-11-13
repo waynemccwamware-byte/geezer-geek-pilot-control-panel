@@ -455,7 +455,7 @@
   <div class="rig">
     <div class="callsign-row">
       <h1><a class="title-link" href="qr.html" target="_blank" rel="noopener">GeezerGeek Pilot Apps</a></h1>
-      <span class="ver mono">v1.23</span>
+      <span class="ver mono">v1.24</span>
     </div>
     <p class="purpose-line">Some people spend their retirement volunteering at a food bank or the Red Cross&hellip; I fly doctors to Mexico and coach fellow pilots.</p>
     <div class="feedback-row">
@@ -942,5 +942,18 @@
 })();
 </script>
 <!-- GGP-FOOTER-JS END -->
+<!-- v1.24 (13-Nov-2026): in the installed home-screen app, iOS keeps links to this site's own pages inside the app
+     window (scope "./"), so /reference would replace the Control Panel with no way back. When running standalone, point
+     Reference Materials links at the same function on Netlify's main-branch alias — another host, so iOS opens it in
+     its own browser sheet, like the Google links. In a browser tab the links are left alone. -->
+<script>
+(() => {
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (!standalone || location.hostname !== 'geezer-geek-pilot-control-panel.netlify.app') return;
+  const OUT = 'https://main--geezer-geek-pilot-control-panel.netlify.app/reference';
+  document.querySelectorAll('a[href="/reference"], a[href="https://geezer-geek-pilot-control-panel.netlify.app/reference"]')
+    .forEach(a => { a.href = OUT; a.target = '_blank'; a.rel = 'noopener'; });
+})();
+</script>
 </body>
 </html>
