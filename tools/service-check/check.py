@@ -124,6 +124,13 @@ def main(argv):
         if until and until < today.isoformat():
             ok, detail = False, f"FAA frequency cycle ended {until}: press Update FAA data in Clearance Delivery"
     add('App functions', 'Clearance Delivery (nasr-freq)', ok, detail)
+
+    # v1.23 Control Panel: /reference re-serves the Reference Materials Google Doc's PDF export inline.
+    # A 200 that isn't a PDF means the function fell back to the Doc's /preview page (export failed).
+    status, body = get('https://geezer-geek-pilot-control-panel.netlify.app/reference')
+    ok = status == 200 and body.startswith('%PDF')
+    add('App functions', 'Control Panel (reference: Reference Materials as PDF)', ok,
+        'PDF served' if ok else f'HTTP {status}, not a PDF (export failed, fell back to /preview?)')
     # The FAA file that function downloads. (www.faa.gov itself answers 403 to GitHub's servers, so it
     # can't be checked from here; the function reads it from Netlify without trouble.)
     if meta.get('source'):
