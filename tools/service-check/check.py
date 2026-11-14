@@ -25,6 +25,7 @@ TALLY = 'https://tally.yuki.sh/counters/wamware/'
 APPS = {   # Tally key -> live site
     'geezer-geek-pilot-control-panel': 'https://geezer-geek-pilot-control-panel.netlify.app/',
     'claude-foreflight-primer': 'https://claude-foreflight-primer.netlify.app/',
+    'airfield-kml-builder': 'https://airfield-kml-builder.netlify.app/',
     'piston-ga-stats': 'https://piston-ga-stats.netlify.app/',
     'weather-history-probability': 'https://weather-history-probability.netlify.app/',
     'digital-autopilots-quiz': 'https://digital-autopilots-quiz.netlify.app/',
@@ -126,6 +127,17 @@ def main(argv):
         if until and until < today.isoformat():
             ok, detail = False, f"FAA frequency cycle ended {until}: press Update FAA data in Clearance Delivery"
     add('App functions', 'Clearance Delivery (nasr-freq)', ok, detail)
+
+    # Airfield KML Builder (14-Nov-2026): AFAC's aerodrome list read from gob.mx, and OpenStreetMap shapes for SBY
+    status, d = get_json('https://airfield-kml-builder.netlify.app/.netlify/functions/afac')
+    src = (d or {}).get('source') or {}
+    ok = bool(d) and (src.get('count') or 0) > 1000 and any(r.get('des') == 'SBY' for r in d.get('records') or [])
+    add('App functions', 'Airfield KML Builder (afac: AFAC list from gob.mx)', ok,
+        f"{src.get('count')} aerodromes, AFAC edition {src.get('edition')}" if ok else f'HTTP {status}, AFAC list missing or short')
+    status, d = get_json('https://airfield-kml-builder.netlify.app/.netlify/functions/osm?lat=26.25852&lon=-112.49787')
+    ok = bool(d) and any((e.get('tags') or {}).get('aeroway') == 'runway' for e in d.get('elements') or [])
+    add('App functions', 'Airfield KML Builder (osm: OpenStreetMap runway at SBY)', ok,
+        f"runway found via {d.get('server')}" if ok else f"HTTP {status}, {(d or {}).get('error') or 'no runway'}")
 
     # v1.23 Control Panel: /reference re-serves the Reference Materials Google Doc's PDF export inline.
     # A 200 that isn't a PDF means the function fell back to the Doc's /preview page (export failed).

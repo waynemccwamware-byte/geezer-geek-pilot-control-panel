@@ -455,7 +455,7 @@
   <div class="rig">
     <div class="callsign-row">
       <h1><a class="title-link" href="qr.html" target="_blank" rel="noopener">GeezerGeek Pilot Apps</a></h1>
-      <span class="ver mono">v1.24</span>
+      <span class="ver mono">v1.25</span>
     </div>
     <p class="purpose-line">Some people spend their retirement volunteering at a food bank or the Red Cross&hellip; I fly doctors to Mexico and coach fellow pilots.</p>
     <div class="feedback-row">
@@ -653,7 +653,7 @@
 
       <section class="app-group g-plan" aria-labelledby="grp-plan">
         <h2 class="group-label" id="grp-plan">Time &amp; Fuel Planning</h2>
-        <div class="app-row">
+        <div class="app-row row-3">
           <a class="app-cell" href="https://days-flight-schedule.netlify.app/" aria-label="Open Day's Flight Schedule">
             <h3 class="app-name">Day's Flight Schedule</h3>
             <svg class="app-preview preview-strip" viewBox="-40 0 280 68" preserveAspectRatio="none" role="img" aria-label="Timeline of a flying day: depart home/hotel at KSBA wheels-up, stops at KSDM and MMSF, arrive home/hotel at MMLT, with calculated times above each">
@@ -691,6 +691,26 @@
               <text x="150" y="47.5" font-family="monospace" font-size="9.5" fill="#8b93a1" text-anchor="middle">R&#8195;<tspan fill="#f5a623">6.0 gal</tspan></text>
             </svg>
             <p class="app-desc">Enter the fuel you'll have after the current leg and the minimum you need for the next &mdash; alternate and reserve included &mdash; and it works out how much to add, in gallons and liters, total and per side.</p>
+          </a>
+          <!-- v1.25 (14-Nov-2026): Airfield KML Builder, in Time & Fuel Planning at Wayne's request (not the New group, so its graphic stays still) -->
+          <a class="app-cell" href="https://airfield-kml-builder.netlify.app/" aria-label="Open Airfield KML Builder">
+            <h3 class="app-name">Airfield KML Builder</h3>
+            <svg class="app-preview" viewBox="0 0 200 56" preserveAspectRatio="none" role="img" aria-label="A dirt strip outlined with its airfield box and runway numbers 09 and 27, handed to ForeFlight as a KML map layer">
+              <rect width="200" height="56" fill="#2a2a1f"/>
+              <path d="M0 40 Q40 32 80 38 T150 34 V56 H0 Z" fill="#33331f" opacity="0.8"/>
+              <rect x="14" y="17" width="110" height="22" fill="#caa47f" fill-opacity="0.32" stroke="#caa47f" stroke-width="1"/>
+              <rect x="24" y="24" width="90" height="8" fill="#6e4321" stroke="#ffffff" stroke-width="0.8"/>
+              <line x1="27" y1="28" x2="111" y2="28" stroke="#ffffff" stroke-width="0.5" stroke-dasharray="4 3"/>
+              <rect x="74" y="32" width="14" height="6" fill="#8e5f39"/>
+              <text x="20" y="31" font-family="monospace" font-size="7" font-weight="600" fill="#f5a623" text-anchor="end">09</text>
+              <text x="118" y="31" font-family="monospace" font-size="7" font-weight="600" fill="#f5a623">27</text>
+              <line x1="128" y1="28" x2="146" y2="28" stroke="#5b6472" stroke-width="1.2" stroke-dasharray="3 3"/>
+              <rect x="148" y="8" width="46" height="40" rx="5" fill="#1b222c" stroke="#3a4454"/>
+              <text x="171" y="20" font-family="monospace" font-size="7.5" fill="#f5a623" text-anchor="middle">.kml</text>
+              <rect x="154" y="27" width="34" height="14" fill="#caa47f" fill-opacity="0.32" stroke="#caa47f" stroke-width="0.6"/>
+              <rect x="158" y="32" width="26" height="4" fill="#6e4321" stroke="#ffffff" stroke-width="0.5"/>
+            </svg>
+            <p class="app-desc">Pick a Mexican airstrip from AFAC's official list, check it isn't already an ICAO airport, preview it on satellite imagery, and send ForeFlight a map layer of its runway, ramp and taxiways. With thanks to airports.robrc.net.</p>
           </a>
           </div>
       </section>
@@ -957,3 +977,4 @@
 </script>
 </body>
 </html>
+<!-- v1.25 (14-Nov-2026): Airfield KML Builder card added to Time & Fuel Planning (Wayne's choice, in place of the New group). -->
