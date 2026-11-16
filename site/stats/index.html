@@ -137,7 +137,7 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
 </head>
 <body>
 <div class="rig">
-  <div class="callsign-row"><h1>App Open Counts</h1><span class="ver mono">v1.3</span></div>
+  <div class="callsign-row"><h1>App Open Counts</h1><span class="ver mono">v1.4</span></div>
   <p class="purpose-line"><span class="purpose-label">Purpose:</span> How many times each GeezerGeek Pilot app has been opened, and by how many visitors, each list most first. Reading these numbers doesn't add to them.</p>
 
   <div class="cards">
@@ -291,28 +291,44 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
 
   const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const pt = d => new Date(d.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));   // wall clock in California
-  const dayOf = t => { const d = pt(new Date(t.getTime() - 2 * 3600e3)); return `${String(d.getDate()).padStart(2, '0')}-${MON[d.getMonth()]}-${d.getFullYear()}`; };
+  // v1.4: a reading closes the California day that ended before it. Back off 12 h (was 2 h) so a run GitHub starts
+  // hours late (16-Nov-2026 ran at 02:14 PST) still lands on the right day instead of skipping one.
+  const dayOf = t => { const d = pt(new Date(t.getTime() - 12 * 3600e3)); return `${String(d.getDate()).padStart(2, '0')}-${MON[d.getMonth()]}-${d.getFullYear()}`; };
   const short = s => s.slice(0, 6);
   const clock = t => pt(t).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
-  // value of one reading for the current app + measure
-  function val(r) {
+  // v1.4: increase in one counter between readings i-1 and i. A counter's first appearance is a new app whose Tally
+  // counter started at 0 (Mexican Airstrips, 14-Nov-2026), so it counts from 0 instead of blanking the bar.
+  let first = {};
+  function delta(i, key) {
+    const a = rows[i - 1].c[key], b = rows[i].c[key];
+    if (!b) return null;
+    if (!a) return first[key] === i ? b[measure] : null;
+    return b[measure] < a[measure] ? null : b[measure] - a[measure];
+  }
+  function inc(i) {
     const k = sel.value;
-    if (k) { const c = r.c[k]; return c ? c[measure] : null; }
-    if (measure === 1) return r.c['ggp-all'] ? r.c['ggp-all'][1] : null;   // unique across all apps
+    if (k) return rows[i].c[k] || rows[i - 1].c[k] ? delta(i, k) : undefined;   // undefined: app not launched yet
+    if (measure === 1) return delta(i, 'ggp-all');   // unique across all apps
+    // v1.4: sum each app's own increase (was: total of all apps, blank whenever any app was missing from a reading)
     let sum = 0;
-    for (const [key] of APPS) { if (!r.c[key]) return null; sum += r.c[key][0]; }
+    for (const [key] of APPS) {
+      if (!rows[i].c[key] && !rows[i - 1].c[key]) continue;   // not launched yet
+      const d = delta(i, key); if (d == null) return null; sum += d;
+    }
     return sum;
   }
 
   function bars() {
     const out = [];
     for (let i = 1; i < rows.length; i++) {
-      const a = val(rows[i - 1]), b = val(rows[i]);
-      const hrs = (rows[i].t - rows[i - 1].t) / 3600e3;
-      out.push({ day: dayOf(rows[i].t), from: rows[i - 1].t, to: rows[i].t, hrs,
-        v: a == null || b == null || b < a ? null : b - a, part: hrs < 20, multi: hrs > 30 });
+      const v = inc(i); if (v === undefined) continue;
+      const day = dayOf(rows[i].t), hrs = (rows[i].t - rows[i - 1].t) / 3600e3, prev = out[out.length - 1];
+      if (prev && prev.day === day) {   // v1.4: two readings closing the same day make one bar
+        prev.v = prev.v == null || v == null ? null : prev.v + v; prev.to = rows[i].t; prev.hrs += hrs;
+      } else out.push({ day, from: rows[i - 1].t, to: rows[i].t, hrs, v, launch: !!sel.value && first[sel.value] === i });
     }
+    out.forEach(b => { b.part = b.hrs < 20 || b.launch; b.multi = b.hrs > 30; });   // launch day: app was live part of it
     return out;
   }
 
@@ -354,7 +370,7 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
     chart.querySelectorAll('g[data-i]').forEach(el => {
       const b = B[+el.dataset.i];
       const show = () => {
-        const note = b.part ? `<br><span>partial: ${clock(b.from)} to ${clock(b.to)}</span>` : b.multi ? `<br><span>covers ${Math.round(b.hrs / 24)} days (a reading was missed)</span>` : '';
+        const note = b.launch ? '<br><span>launch day (partial)</span>' : b.part ? `<br><span>partial: ${clock(b.from)} to ${clock(b.to)}</span>` : b.multi ? `<br><span>covers ${Math.round(b.hrs / 24)} days (a reading was missed)</span>` : '';
         tip.innerHTML = `${b.day}<br><b>${b.v.toLocaleString()}</b> <span>${what}</span>${note}`;
         const r = el.querySelector('.b').getBoundingClientRect(), c = chart.getBoundingClientRect();
         tip.style.left = Math.min(c.width - 70, Math.max(70, r.left - c.left + r.width / 2)) + 'px';
@@ -378,7 +394,8 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
 
   fetch(HIST_URL, { cache: 'no-store' })
     .then(r => r.ok ? r.json() : Promise.reject(r.status))
-    .then(h => { rows = (h.rows || []).map(r => ({ t: new Date(r.t.replace(/Z$/, ':00Z')), c: r.c })).sort((a, b) => a.t - b.t); draw(); })
+    .then(h => { rows = (h.rows || []).map(r => ({ t: new Date(r.t.replace(/Z$/, ':00Z')), c: r.c })).sort((a, b) => a.t - b.t);
+      first = {}; rows.forEach((r, i) => { for (const k in r.c) if (!(k in first)) first[k] = i; }); draw(); })
     .catch(() => { chart.innerHTML = '<div class="hist-empty">Daily history unavailable right now.</div>'; });
 })();
 </script>
