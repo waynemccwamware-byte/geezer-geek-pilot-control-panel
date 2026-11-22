@@ -22,11 +22,13 @@ def cam(az):
     return P
 # scene, world metres: x east, y north, z up; runway on the y axis, 34 end north (as in the app's 3-D view)
 S, Nn = (0, -HALF, 0), (0, HALF, 0)
-pattern = [(0, -HALF - 900, TPA), (-1100, -HALF - 900, TPA), (-1100, HALF + 900, TPA), (0, HALF + 900, TPA)]
+PW = 0.5 * NM                        # the app's pattern (site/index.html patterns()): downwinds PW either side of the centerline,
+pattern = [(-PW, -HALF - PW, TPA), (PW, -HALF - PW, TPA), (PW, HALF + PW, TPA), (-PW, HALF + PW, TPA)]   # base turns PW past each end,
+finals = [[(0, -HALF - PW, TPA), (0, -HALF, TPA)], [(0, HALF + PW, TPA), (0, HALF, TPA)]]              # finals on the centerline; all at TPA as in view3d.js
 app34 = [(0, HALF, 0), (0, HALF + 2 * NM, ft(1890)), (0, HALF + 5 * NM, ft(2840))]   # drawn beyond the 34 label, as the app does
 app16 = [(0, -HALF, 0), (0, -HALF - 1.2 * NM, ft(1890) * 0.6)]
 ridge = [(x, 26000 + 3000 * math.sin(x / 5300.0), 700 + 420 * math.sin(x / 2900.0 + 1) + 260 * math.sin(x / 1100.0)) for x in range(-38000, 38001, 1900)]
-labels = [('34 2NM 1,890′', app34[1], '#f5a623', 'L'), ('34 5NM 2,840′', app34[2], '#f5a623', 'R'), ('TPA 2,210′', (-1100, 0, TPA), '#e7e4dc', 'L')]
+labels = [('34 2NM 1,890′', app34[1], '#f5a623', 'L'), ('34 5NM 2,840′', app34[2], '#f5a623', 'R'), ('TPA 2,210′', (-PW, 0, TPA), '#e7e4dc', 'L')]
 ends = [('16', S), ('34', Nn)]
 eas = lambda t: 0.5 - 0.5 * math.cos(math.pi * t)
 azs = [math.radians(AZ0 - SW / 2 + SW * eas(i / (N - 1))) for i in range(N)]
@@ -52,6 +54,7 @@ ridge_pts = ridge + [(38000, 26000, 0), (-38000, 26000, 0)]
 out.append(path_el(ridge_pts, True, fill='#3a3a28', stroke='#565640', stroke_width='0.8'))
 out.append(path_el([(-160, -HALF - 120, 0), (160, -HALF - 120, 0), (160, HALF + 120, 0), (-160, HALF + 120, 0)], True, fill='#caa47f', fill_opacity='0.18', stroke='#caa47f', stroke_width='0.6'))   # airfield box
 out.append(path_el(pattern, True, fill='none', stroke='#4fc3f7', stroke_width='1.6', stroke_dasharray='5 4'))
+for leg in finals: out.append(path_el(leg, False, fill='none', stroke='#4fc3f7', stroke_width='1.6', stroke_dasharray='5 4'))
 out.append(path_el(app16, False, fill='none', stroke='#f5a623', stroke_width='2', stroke_dasharray='7 4'))
 out.append(path_el(app34, False, fill='none', stroke='#f5a623', stroke_width='1.6', stroke_dasharray='6 4'))
 out.append(path_el([S, Nn], False, fill='none', stroke='#ffffff', stroke_width='2.2', stroke_linecap='round'))
