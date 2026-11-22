@@ -9,3 +9,8 @@
 - The repo is public: no flight dates are stored here, only first-visit years, flight counts and
   entry IDs already counted.
 - `make_basemap.mjs` regenerates `geo.json` (npm world-atlas@2, us-atlas@3, topojson-client@3, d3-geo@3).
+
+22-Nov-2026: template.html re-synced from the live page (it had fallen behind at v1.2; the embed/tour/cue
+features of v1.3–v1.4 now live in it). Seven airports Wayne back-filled into old entries after a FlySto
+cross-check (MRLB, MM45, KRTN, KBMT, MBPV, MMLM, MX-1804) were added to airports.json by hand, since
+refresh.py does not re-count edited entries.

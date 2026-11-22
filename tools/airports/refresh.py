@@ -78,7 +78,8 @@ def region(ctry, rg):
 
 def toks(s):
     s = re.sub(r'\([^)]*\)', '', (s or '').upper())
-    return [x for x in re.split(r'[\s,\-\.]+', s) if x]
+    s = re.sub(r'\b([A-Z]{2})-(\d{3,4})\b', r'\1_\2', s)   # keep OurAirports idents like MX-1804 whole (22-Nov-2026)
+    return [x.replace('_', '-') for x in re.split(r'[\s,\-\.]+', s) if x]
 
 
 def load_oa(path):
