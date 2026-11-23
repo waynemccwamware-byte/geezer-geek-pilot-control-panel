@@ -7,7 +7,8 @@ Timeline: 0-2.5 s finished picture (the still frame the page shows at 0.8 s for 
 airstrip appearing as the line passes it and the count going up, 8.8 the longest gap flashes red, hold to 12 s.
 Land: Natural Earth 50 m land (public domain), github.com/nvkelso/natural-earth-vector geojson/ne_50m_land.geojson.
 Run: emergency-airstrips-animated.py afac.json mx-icao.json mx-icao-runways.json ne_50m_land.geojson > card.svg
-pip: shapely."""
+pip: shapely.
+Airstrip dots green (#3ecb86) so they stand out from the orange route, tan land and red gap (Wayne, v1.34)."""
 import json, math, sys
 from shapely.geometry import LineString, Point, shape, box
 from shapely.ops import substring
@@ -105,7 +106,7 @@ times = []
 for q, code, paved, isicao in order:
     x, y = T(*q); t = t_at(route.project(Point(q))); times.append(t)
     if isicao: shp = f'<rect x="{x - 2.8}" y="{y - 2.8}" width="5.6" height="5.6" rx="1" fill="#7fd6ee" stroke="#0b1620" stroke-width="0.8">'
-    else: shp = f'<circle cx="{x}" cy="{y}" r="3" fill="{"#b9c2cf" if paved else "#c08a52"}" stroke="#0b1620" stroke-width="0.8">'
+    else: shp = f'<circle cx="{x}" cy="{y}" r="3" fill="#3ecb86" stroke="#0b1620" stroke-width="0.8">'
     tag = 'rect' if isicao else 'circle'
     # a ring that pings out as each one appears
     out.append(f'<circle cx="{x}" cy="{y}" r="3" fill="none" stroke="#e7e4dc" stroke-width="0.8" opacity="0">'
