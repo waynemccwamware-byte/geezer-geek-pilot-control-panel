@@ -33,7 +33,7 @@ What the blocks do:
 
 ## Changing the footer
 
-1. Clone all nine app repos side by side in one folder.
+1. Clone all the app repos listed in `APPS` side by side in one folder (twelve repos as of 23-Nov-2026).
 2. Edit the templates or `APPS` in `ggp_footer.py` and bump `VERSION`.
 3. `python3 ggp_footer.py <folder>` rewrites the blocks; `--check` only reports drift.
 4. Commit and push each repo; every push redeploys that site.

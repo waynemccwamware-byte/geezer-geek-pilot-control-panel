@@ -79,8 +79,10 @@ APPS = {
     'clearance-delivery': dict(file='site/index.html', label='Clearance Delivery Trainer'),
     'piston-ga-stats': dict(file='site/index.html', label='GA Accident Stats'),
     'claude-foreflight-primer': dict(file='site/index.html', label='Claude + ForeFlight Primer'),
-    # 14-Nov-2026: new app, not on the Control Panel yet (Wayne)
+    # 14-Nov-2026: new app (on the Control Panel from v1.25)
     'airfield-kml-builder': dict(file='site/index.html', label='Mexican Airstrips for your EFB and Sim'),
+    # 23-Nov-2026: companion to Mexican Airstrips (Control Panel v1.32, Time, Route & Fuel Planning)
+    'emergency-airstrips-mexico': dict(file='site/index.html', label='Planning Emergency Airstrips in Mexico'),
     'airports-visited': dict(repo='geezer-geek-pilot-control-panel', file='site/airports/index.html', label='Airports Visited',
                              credit_link=False, all_count=False),   # the page the credit links to
     # v1.4: open-counts page, linked from the Control Panel's "Opened N times" (Wayne, 02-Nov-2026)
