@@ -26,6 +26,7 @@ APPS = {   # Tally key -> live site
     'geezer-geek-pilot-control-panel': 'https://geezer-geek-pilot-control-panel.netlify.app/',
     'claude-foreflight-primer': 'https://claude-foreflight-primer.netlify.app/',
     'airfield-kml-builder': 'https://airfield-kml-builder.netlify.app/',
+    'emergency-airstrips-mexico': 'https://emergency-airstrips-mexico.netlify.app/',   # 24-Nov-2026
     'piston-ga-stats': 'https://piston-ga-stats.netlify.app/',
     'weather-history-probability': 'https://weather-history-probability.netlify.app/',
     'digital-autopilots-quiz': 'https://digital-autopilots-quiz.netlify.app/',
