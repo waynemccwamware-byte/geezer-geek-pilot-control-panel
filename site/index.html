@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
-<title>GeezerGeek Pilot Apps</title>
+<title data-es="Apps de GeezerGeek Pilot">GeezerGeek Pilot Apps</title>
 <meta name="theme-color" content="#10141a">
 <meta name="description" content="Free web apps for GA pilots: weather history, planning, ATC practice and safety. No signup.">
 <!-- Link previews (Facebook, iMessage, Slack, forums). Image is site/og-image.png, 1800x945. -->
@@ -13,7 +13,7 @@
 <meta property="og:site_name" content="GeezerGeek Pilot Apps">
 <meta property="og:title" content="GeezerGeek Pilot Apps: free tools for GA pilots">
 <meta property="og:description" content="Weather, planning, ATC practice and safety. Free, no signup, nothing to install.">
-<meta property="og:image" content="https://geezer-geek-pilot-control-panel.netlify.app/og-image.png?v=4">
+<meta property="og:image" content="https://geezer-geek-pilot-control-panel.netlify.app/og-image.png?v=5">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1800">
 <meta property="og:image:height" content="945">
@@ -135,6 +135,11 @@
     font-size: 11px;
     color: var(--text-muted);
   }
+  /* v1.37 (25-Nov-2026): English | Español switch at the right of the title row, version under it (Wayne) */
+  .callsign-row { align-items: center; gap: 12px; }
+  .hdr-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+  .app-name .en-only { margin-left: 8px; padding: 1px 6px; border: 1px solid var(--bezel-hi); border-radius: 4px;
+    font: 500 10px 'IBM Plex Mono', monospace; letter-spacing: .04em; color: var(--text-muted); vertical-align: 2px; white-space: nowrap; }
 
   .purpose-line {
     font-size: 13px;
@@ -404,7 +409,100 @@
     .launch-btn { transition: none; }
   }
 </style>
-<!-- GGP-FOOTER-CSS START v1.14 · 13-Nov-2026 · shared footer styles, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
+<!-- GGP-FOOTER-CSS START v1.15 · 25-Nov-2026 · shared footer styles + language core, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
+<script>
+(function () {
+  if (window.ggpLang) return;
+  var KEY = 'ggp-lang', I18N = true, SITES = ['geezer-geek-pilot-control-panel','weather-history-probability','digital-autopilots-quiz','tec-route-lookup','atc-chair-fly-trainer','days-flight-schedule','fuel-to-add','clearance-delivery','piston-ga-stats','claude-foreflight-primer','airfield-kml-builder','emergency-airstrips-mexico'];
+  var q = null, saved = null, lang, explicit = false;
+  try { q = new URLSearchParams(location.search).get('lang'); } catch (e) {}
+  try { saved = localStorage.getItem(KEY); } catch (e) {}
+  if (q === 'en' || q === 'es') { lang = q; explicit = true; if (saved !== q) { try { localStorage.setItem(KEY, q); } catch (e) {} } }
+  else if (saved === 'en' || saved === 'es') { lang = saved; explicit = true; }
+  else {
+    var ua = navigator.userAgent || '';
+    var mobile = /iPhone|iPad|iPod|Android/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+    var first = (navigator.languages && navigator.languages[0]) || navigator.language || '';
+    lang = mobile && /^es\b/i.test(first) ? 'es' : 'en';
+  }
+  var es = lang === 'es';
+  if (I18N) document.documentElement.lang = es ? 'es-MX' : 'en';
+  var MON = { en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+              es: ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'] };
+  var ATTRS = ['title', 'placeholder', 'aria-label', 'alt', 'value', 'content'];
+  var ours = function (host) { return SITES.indexOf(host.replace(/\.netlify\.app$/, '').replace(/^[a-z0-9-]+--/, '')) >= 0 && /\.netlify\.app$/.test(host); };
+  var withLang = function (href) {
+    try {
+      var u = new URL(href, location.href);
+      if (!/^https?:$/.test(u.protocol) || !ours(u.hostname)) return href;
+      u.searchParams.set('lang', lang);
+      return u.toString();
+    } catch (e) { return href; }
+  };
+  var G = window.ggpLang = {
+    lang: lang, es: es, explicit: explicit, i18n: I18N,
+    // L('English', 'Español'): the string for the current language (Spanish missing → English)
+    L: function (en, sp) { return es && sp != null ? sp : en; },
+    // dd-mmm-yyyy: 25-Nov-2026 / 25-nov-2026. Takes a Date or 'YYYY-MM-DD…'.
+    date: function (d) {
+      var y, m, dd;
+      if (d instanceof Date) { y = d.getFullYear(); m = d.getMonth(); dd = d.getDate(); }
+      else { var x = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d || '')); if (!x) return String(d || ''); y = +x[1]; m = +x[2] - 1; dd = +x[3]; }
+      return (dd < 10 ? '0' : '') + dd + '-' + MON[lang][m] + '-' + y;
+    },
+    withLang: withLang,
+    // Elements marked data-es="…" (innerHTML) or data-es-title, data-es-placeholder, … get their Spanish once.
+    apply: function (root) {
+      if (!es) return;
+      root = root || document;
+      var els = root.querySelectorAll('[data-es],' + ATTRS.map(function (a) { return '[data-es-' + a + ']'; }).join(','));
+      for (var i = 0; i < els.length; i++) {
+        var el = els[i];
+        if (el.__ggpEs) continue;
+        el.__ggpEs = true;
+        if (el.hasAttribute('data-es') && (I18N || el.closest('.ggp-footer'))) el.innerHTML = el.getAttribute('data-es');
+        for (var j = 0; j < ATTRS.length; j++) {
+          var v = el.getAttribute('data-es-' + ATTRS[j]);
+          if (v != null && (I18N || el.closest('.ggp-footer'))) el.setAttribute(ATTRS[j], v);
+        }
+      }
+    },
+    // Save the choice and reload in it (the page is drawn once per language).
+    set: function (l) {
+      if (l !== 'en' && l !== 'es') return;
+      try { localStorage.setItem(KEY, l); } catch (e) {}
+      if (l === 'es' && !es) { try { fetch('https://tally.yuki.sh/counters/wamware/ggp-es-picked', { method: 'POST', keepalive: true }); } catch (e) {} }
+      if (l === lang && explicit) return;
+      var u = new URL(location.href); u.searchParams.delete('lang');
+      location.replace(u.toString());
+    }
+  };
+  // English | Español switch: any .ggp-lang-switch holding buttons with data-ggp-lang="en" / "es".
+  var mark = function () {
+    var bs = document.querySelectorAll('.ggp-lang-switch [data-ggp-lang]');
+    for (var i = 0; i < bs.length; i++) {
+      var on = bs[i].getAttribute('data-ggp-lang') === lang;
+      bs[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+      bs[i].classList.toggle('on', on);
+    }
+  };
+  document.addEventListener('click', function (ev) {
+    var t = ev.target instanceof Element ? ev.target : null;
+    var b = t && t.closest('.ggp-lang-switch [data-ggp-lang]');
+    if (b) { ev.preventDefault(); G.set(b.getAttribute('data-ggp-lang')); return; }
+    // carry the choice to the suite's other sites (each keeps its own storage)
+    var a = explicit && t && t.closest('a[href]');
+    if (a) { var h = withLang(a.href); if (h !== a.href) a.href = h; }
+  }, true);
+  var links = function () {
+    if (!explicit) return;
+    var as = document.querySelectorAll('a[href]');
+    for (var i = 0; i < as.length; i++) { var h = withLang(as[i].href); if (h !== as[i].href) as[i].href = h; }
+  };
+  document.addEventListener('DOMContentLoaded', function () { G.apply(); mark(); links(); });
+  G.mark = mark;
+})();
+</script>
 <style>
 .ggp-footer{
   --ggp-amber:#f5a623; --ggp-muted:#8b93a1; --ggp-bezel:#2a323f; --ggp-bezel-hi:#3a4454;
@@ -452,6 +550,16 @@
   .ggp-footer .ggp-back, .ggp-footer .ggp-extra, .ggp-footer .ggp-count, .ggp-footer .ggp-actions{ display:none !important; }
   .ggp-footer{ border-top:0; margin-top:8px; padding-top:0; }
 }
+/* v1.15: English | Español switch (App Conventions "Language"); sits at the right end of the title row */
+.ggp-lang-switch{ display:inline-flex; flex-shrink:0; border:1px solid #f5a623; border-radius:16px; overflow:hidden;
+  font:600 12.5px/1 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif; }
+.ggp-lang-switch button{ margin:0; padding:7px 12px; border:0; background:transparent; color:#f5a623; font:inherit; cursor:pointer; }
+.ggp-lang-switch button + button{ border-left:1px solid #f5a623; }
+.ggp-lang-switch button.on, .ggp-lang-switch button[aria-pressed="true"]{ background:#f5a623; color:#10141a; }
+.ggp-lang-switch button:not(.on):hover{ background:rgba(245,166,35,.15); }
+.ggp-lang-switch button:focus-visible{ outline:2px solid #e7e4dc; outline-offset:-3px; }
+@media (max-width:400px){ .ggp-lang-switch button{ padding:7px 9px; font-size:12px; } }
+@media print{ .ggp-lang-switch{ display:none !important; } }
 </style>
 <!-- GGP-FOOTER-CSS END -->
 </head>
@@ -459,24 +567,27 @@
   <div class="rig">
     <div class="callsign-row">
       <h1><a class="title-link" href="qr.html" target="_blank" rel="noopener">GeezerGeek Pilot Apps</a></h1>
-      <span class="ver mono">v1.36</span>
+      <div class="hdr-right">
+        <div class="ggp-lang-switch" role="group" aria-label="Language / Idioma"><button type="button" data-ggp-lang="en" lang="en">English</button><button type="button" data-ggp-lang="es" lang="es">Español</button></div>
+        <span class="ver mono">v1.37</span>
+      </div>
     </div>
-    <p class="purpose-line">Some people spend their retirement volunteering at a food bank or the Red Cross&hellip; I fly doctors to Mexico and coach fellow pilots.</p>
+    <p class="purpose-line" data-es="Hay quien dedica su retiro a ser voluntario en un banco de alimentos o en la Cruz Roja&hellip; yo llevo médicos en avioneta a México y asesoro a otros pilotos.">Some people spend their retirement volunteering at a food bank or the Red Cross&hellip; I fly doctors to Mexico and coach fellow pilots.</p>
     <div class="feedback-row">
-      <button class="feedback-btn ggp-feedback" type="button" data-app="GeezerGeek Pilot Apps"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Feedback</span></button>
-      <a class="feedback-btn" href="https://www.youtube.com/playlist?list=PLZEU99ONr5bE" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="4"/><polygon points="10 9 15 12 10 15" fill="currentColor"/></svg><span>YouTube app intros</span></a>
+      <button class="feedback-btn ggp-feedback" type="button" data-app="GeezerGeek Pilot Apps"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span data-es="Comentarios">Feedback</span></button>
+      <a class="feedback-btn" href="https://www.youtube.com/playlist?list=PLZEU99ONr5bE" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="4"/><polygon points="10 9 15 12 10 15" fill="currentColor"/></svg><span data-es="Videos en YouTube">YouTube app intros</span></a>
     </div>
 
     <div class="panel">
-      <section class="app-group g-new is-new" aria-labelledby="grp-new" data-new-until="2027-01-22" data-after-label="Weather, Avionics &amp; Your EFB" data-after-group="grp-wx">
-        <h2 class="group-label" id="grp-new">New</h2>
+      <section class="app-group g-new is-new" aria-labelledby="grp-new" data-new-until="2027-01-22" data-after-label="Weather, Avionics &amp; Your EFB" data-after-label-es="Meteorología, aviónica y tu EFB" data-after-group="grp-wx">
+        <h2 class="group-label" data-es="Nuevas" id="grp-new">New</h2>
         <div class="app-row">
           <!-- v1.35 (24-Nov-2026): the two airstrip cards sit side by side (two columns from 620 px; stacked on iPhone portrait), Mexican Airstrips first, descriptions ~30% shorter with bold lead-ins "Departure/Destination:" and "Enroute Options:" (Wayne). -->
           <!-- v1.28 (21-Nov-2026): Mexican Airstrips moves into New for 60 days (YouTube intro posted 21-Nov-2026); card graphic is the
                app's 3-D view (runway 16/34, pattern at TPA, visual approaches), perspective precomputed per frame and animated as SVG. v1.29 (22-Nov-2026): pattern redrawn as the app draws it,
                centered on the runway: downwinds ½ NM either side, base turns ½ NM past each end, all at TPA (Wayne). v1.30 (22-Nov-2026): no finals legs, as in the app's 3-D view (Wayne) -->
-          <a class="app-cell" href="https://airfield-kml-builder.netlify.app/" aria-label="Open Mexican Airstrips for your EFB and Sim" data-new-until="2027-01-20" data-after-group="grp-wx">
-            <h3 class="app-name">Mexican Airstrips for your EFB and Sim<span class="badge-new">NEW</span></h3>
+          <a class="app-cell" href="https://airfield-kml-builder.netlify.app/" data-es-aria-label="Abrir Pistas mexicanas para tu EFB y simulador" aria-label="Open Mexican Airstrips for your EFB and Sim" data-new-until="2027-01-20" data-after-group="grp-wx">
+            <h3 class="app-name" data-es="Pistas mexicanas para tu EFB y simulador<span class=&quot;badge-new&quot;>NUEVA</span>">Mexican Airstrips for your EFB and Sim<span class="badge-new">NEW</span></h3>
             <svg class="app-preview preview-wide" viewBox="0 0 400 104" role="img" aria-label="A remote airstrip in a slowly turning 3-D view: runway 16/34, the dashed traffic pattern at 2,210 feet, and visual approach paths with 2 and 5 NM fixes">
             <rect width="400" height="104" fill="#0d1117"/>
             <defs><linearGradient id="mxaSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1117"/><stop offset="1" stop-color="#22324a"/></linearGradient></defs>
@@ -494,14 +605,14 @@
             <rect x="265.1" y="84.9" width="14" height="11" fill="#10141a" stroke="#e7e4dc" stroke-width="0.5"><animate attributeName="x" dur="16.0s" repeatCount="indefinite" values="265.1;264.7;263.6;261.8;259.3;256.1;252.2;247.8;242.9;237.6;232.0;226.3;220.5;214.8;209.5;204.5;200.1;196.3;193.3;191.1;189.8;189.3;189.8;191.1;193.3;196.3;200.1;204.5;209.5;214.8;220.5;226.3;232.0;237.6;242.9;247.8;252.2;256.1;259.3;261.8;263.6;264.7"/><animate attributeName="y" dur="16.0s" repeatCount="indefinite" values="84.9;84.9;85.0;85.1;85.3;85.6;85.8;86.1;86.4;86.6;86.9;87.1;87.3;87.4;87.5;87.6;87.6;87.6;87.6;87.6;87.6;87.6;87.6;87.6;87.6;87.6;87.6;87.6;87.5;87.4;87.3;87.1;86.9;86.6;86.4;86.1;85.8;85.6;85.3;85.1;85.0;84.9"/></rect><text x="272.1" y="93.9" font-family="IBM Plex Mono, monospace" font-size="7.5" fill="#e7e4dc" text-anchor="middle"><animate attributeName="x" dur="16.0s" repeatCount="indefinite" values="272.1;271.7;270.6;268.8;266.3;263.1;259.2;254.8;249.9;244.6;239.0;233.3;227.5;221.8;216.5;211.5;207.1;203.3;200.3;198.1;196.8;196.3;196.8;198.1;200.3;203.3;207.1;211.5;216.5;221.8;227.5;233.3;239.0;244.6;249.9;254.8;259.2;263.1;266.3;268.8;270.6;271.7"/><animate attributeName="y" dur="16.0s" repeatCount="indefinite" values="93.9;93.9;94.0;94.1;94.3;94.6;94.8;95.1;95.4;95.6;95.9;96.1;96.3;96.4;96.5;96.6;96.6;96.6;96.6;96.6;96.6;96.6;96.6;96.6;96.6;96.6;96.6;96.6;96.5;96.4;96.3;96.1;95.9;95.6;95.4;95.1;94.8;94.6;94.3;94.1;94.0;93.9"/>16</text>
             <rect x="213.7" y="68.6" width="14" height="11" fill="#10141a" stroke="#e7e4dc" stroke-width="0.5"><animate attributeName="x" dur="16.0s" repeatCount="indefinite" values="213.7;213.6;213.3;212.7;211.9;211.0;209.8;208.5;207.1;205.6;204.0;202.3;200.7;199.1;197.6;196.2;195.0;193.9;193.1;192.5;192.1;192.0;192.1;192.5;193.1;193.9;195.0;196.2;197.6;199.1;200.7;202.3;204.0;205.6;207.1;208.5;209.8;211.0;211.9;212.7;213.3;213.6"/><animate attributeName="y" dur="16.0s" repeatCount="indefinite" values="68.6;68.6;68.6;68.6;68.7;68.7;68.8;68.8;68.9;68.9;69.0;69.0;69.1;69.1;69.1;69.1;69.1;69.1;69.1;69.1;69.1;69.1;69.1;69.1;69.1;69.1;69.1;69.1;69.1;69.1;69.1;69.0;69.0;68.9;68.9;68.8;68.8;68.7;68.7;68.6;68.6;68.6"/></rect><text x="220.7" y="77.6" font-family="IBM Plex Mono, monospace" font-size="7.5" fill="#e7e4dc" text-anchor="middle"><animate attributeName="x" dur="16.0s" repeatCount="indefinite" values="220.7;220.6;220.3;219.7;218.9;218.0;216.8;215.5;214.1;212.6;211.0;209.3;207.7;206.1;204.6;203.2;202.0;200.9;200.1;199.5;199.1;199.0;199.1;199.5;200.1;200.9;202.0;203.2;204.6;206.1;207.7;209.3;211.0;212.6;214.1;215.5;216.8;218.0;218.9;219.7;220.3;220.6"/><animate attributeName="y" dur="16.0s" repeatCount="indefinite" values="77.6;77.6;77.6;77.6;77.7;77.7;77.8;77.8;77.9;77.9;78.0;78.0;78.1;78.1;78.1;78.1;78.1;78.1;78.1;78.1;78.1;78.1;78.1;78.1;78.1;78.1;78.1;78.1;78.1;78.1;78.1;78.0;78.0;77.9;77.9;77.8;77.8;77.7;77.7;77.6;77.6;77.6"/>34</text>
             </svg>
-            <p class="app-desc"><strong>Departure/Destination:</strong> pick a registered airstrip from AFAC&rsquo;s list, check its runway ends on satellite imagery, and send it to ForeFlight as a map layer and waypoint &mdash; or build X-Plane scenery. New: a 3-D view with visual approaches.</p>
+            <p class="app-desc" data-es="<strong>Salida/Destino:</strong> elige una pista registrada en la lista de la AFAC, revisa los extremos de la pista en imágenes de satélite y mándala a ForeFlight como capa de mapa y waypoint &mdash; o crea su escenario para X-Plane. Nuevo: vista 3-D con aproximaciones visuales."><strong>Departure/Destination:</strong> pick a registered airstrip from AFAC&rsquo;s list, check its runway ends on satellite imagery, and send it to ForeFlight as a map layer and waypoint &mdash; or build X-Plane scenery. New: a 3-D view with visual approaches.</p>
           </a>
           <!-- v1.33 (23-Nov-2026): Planning Emergency Airstrips in Mexico moves into New (newest first) for 60 days, with an animated
                card from tools/new-card/emergency-airstrips-animated.py (Wayne): the route types itself in, the line draws KSDM MMPE SQA,
                airstrips appear as it passes them, the 99 NM gap flashes red; 12 s loop starting on the finished picture, so the still
                frame (Reduce Motion, or after New) is complete. It returns to Time, Route & Fuel Planning on 22-Jan-2027. -->
-          <a class="app-cell" href="https://emergency-airstrips-mexico.netlify.app/" aria-label="Open Planning Emergency Airstrips in Mexico" data-new-until="2027-01-22" data-after-group="grp-plan">
-            <h3 class="app-name">Planning Emergency Airstrips in Mexico<span class="badge-new">NEW</span></h3>
+          <a class="app-cell" href="https://emergency-airstrips-mexico.netlify.app/" data-es-aria-label="Abrir Planeación de pistas de emergencia en México" aria-label="Open Planning Emergency Airstrips in Mexico" data-new-until="2027-01-22" data-after-group="grp-plan">
+            <h3 class="app-name" data-es="Planeación de pistas de emergencia en México<span class=&quot;badge-new&quot;>NUEVA</span>">Planning Emergency Airstrips in Mexico<span class="badge-new">NEW</span></h3>
 <svg class="app-preview preview-wide" viewBox="0 0 400 104" role="img" aria-label="Animated: the route KSDM MMPE XSQA is typed in and drawn across northwest Mexico with its 25 NM corridor; ten airstrips appear as the line passes them, and the longest stretch with no airstrip, 99 NM, shows in red">
 <rect width="400" height="104" fill="#0b1620"/>
 <clipPath id="eamMap"><rect x="6" y="6" width="174.4" height="92" rx="3"/></clipPath>
@@ -533,36 +644,36 @@
 <g><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" keyTimes="0.0000;0.2083;0.2500;0.5429;0.5554;1.0000" values="1;1;0;0;1;1"/><circle cx="94.2" cy="43.5" r="3.2" fill="#f5a623" stroke="#0b1620" stroke-width="0.9"/><text x="94.2" y="38.5" font-family="monospace" font-size="8" font-weight="700" fill="#f5a623" text-anchor="middle" stroke="#0b1620" stroke-width="2.2" paint-order="stroke">MMPE</text></g>
 <g><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" keyTimes="0.0000;0.2083;0.2500;0.7167;0.7292;1.0000" values="1;1;0;0;1;1"/><circle cx="155.3" cy="85.0" r="3.2" fill="#f5a623" stroke="#0b1620" stroke-width="0.9"/><text x="155.3" y="94.0" font-family="monospace" font-size="8" font-weight="700" fill="#f5a623" text-anchor="middle" stroke="#0b1620" stroke-width="2.2" paint-order="stroke">SQA</text></g>
 </g>
-<text x="196" y="14" font-family="monospace" font-size="6.5" fill="#8b93a1" letter-spacing="0.6">ROUTE</text>
+<text data-es="RUTA" x="196" y="14" font-family="monospace" font-size="6.5" fill="#8b93a1" letter-spacing="0.6">ROUTE</text>
 <rect x="196" y="18" width="196" height="17" rx="3" fill="#10141a" stroke="#3a4454"/>
 <clipPath id="eamType"><rect x="201" y="18" height="17" width="68.2"><animate attributeName="width" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.2083;0.2500;0.2583;0.2667;0.2750;0.2833;0.2917;0.3000;0.3083;0.3167;0.3250;0.3333;0.3417;0.3500;0.3583;0.3667" values="68.2;68.2;0;4.8;9.6;14.4;19.2;24.0;28.8;33.6;38.4;43.2;48.0;52.8;57.6;62.4;67.2"/></rect></clipPath>
 <text x="201" y="29.6" font-family="monospace" font-size="8" fill="#e7e4dc" clip-path="url(#eamType)">KSDM MMPE XSQA</text>
 <rect x="201" y="22.5" width="1" height="9" fill="#f5a623" opacity="0"><animate attributeName="x" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.2500;0.2583;0.2667;0.2750;0.2833;0.2917;0.3000;0.3083;0.3167;0.3250;0.3333;0.3417;0.3500;0.3583;0.3667" values="269.2;201;206.3;211.1;215.9;220.7;225.5;230.3;235.1;239.9;244.7;249.5;254.3;259.1;263.9;268.7"/><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.2500;0.2917;0.3167;0.3417;0.3833" values="0;1;1;1;1;0"/></rect>
-<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="0">0<tspan font-size="9" font-weight="400"> airstrips</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.2500;0.3842" values="0;1;0"/></text>
-<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="0">1<tspan font-size="9" font-weight="400"> airstrip</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.3842;0.3998" values="0;1;0"/></text>
-<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="0">2<tspan font-size="9" font-weight="400"> airstrips</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.3998;0.4243" values="0;1;0"/></text>
-<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="0">3<tspan font-size="9" font-weight="400"> airstrips</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.4243;0.4635" values="0;1;0"/></text>
-<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="0">4<tspan font-size="9" font-weight="400"> airstrips</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.4635;0.4635" values="0;1;0"/></text>
-<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="0">5<tspan font-size="9" font-weight="400"> airstrips</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.4635;0.4644" values="0;1;0"/></text>
-<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="0">6<tspan font-size="9" font-weight="400"> airstrips</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.4644;0.5726" values="0;1;0"/></text>
-<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="0">7<tspan font-size="9" font-weight="400"> airstrips</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.5726;0.5871" values="0;1;0"/></text>
-<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="0">8<tspan font-size="9" font-weight="400"> airstrips</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.5871;0.5963" values="0;1;0"/></text>
-<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="0">9<tspan font-size="9" font-weight="400"> airstrips</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.5963;0.6663" values="0;1;0"/></text>
-<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="1">10<tspan font-size="9" font-weight="400"> airstrips</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.2292;0.6663" values="1;0;1"/></text>
-<text x="196" y="66" font-family="sans-serif" font-size="7" fill="#8b93a1">within 25 NM of the route</text>
-<g><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" keyTimes="0.0000;0.2083;0.2500;0.7333;0.7458;1.0000" values="1;1;0;0;1;1"/><text x="196" y="86" font-family="monospace" font-size="12" font-weight="700" fill="#e0705f">99 NM<tspan font-size="9" font-weight="400"> gap</tspan></text><text x="196" y="96" font-family="sans-serif" font-size="7" fill="#8b93a1">longest with no airstrip, in red</text></g>
+<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="0">0<tspan data-es=" pistas" font-size="9" font-weight="400"> airstrips</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.2500;0.3842" values="0;1;0"/></text>
+<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="0">1<tspan data-es=" pista" font-size="9" font-weight="400"> airstrip</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.3842;0.3998" values="0;1;0"/></text>
+<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="0">2<tspan data-es=" pistas" font-size="9" font-weight="400"> airstrips</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.3998;0.4243" values="0;1;0"/></text>
+<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="0">3<tspan data-es=" pistas" font-size="9" font-weight="400"> airstrips</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.4243;0.4635" values="0;1;0"/></text>
+<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="0">4<tspan data-es=" pistas" font-size="9" font-weight="400"> airstrips</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.4635;0.4635" values="0;1;0"/></text>
+<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="0">5<tspan data-es=" pistas" font-size="9" font-weight="400"> airstrips</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.4635;0.4644" values="0;1;0"/></text>
+<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="0">6<tspan data-es=" pistas" font-size="9" font-weight="400"> airstrips</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.4644;0.5726" values="0;1;0"/></text>
+<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="0">7<tspan data-es=" pistas" font-size="9" font-weight="400"> airstrips</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.5726;0.5871" values="0;1;0"/></text>
+<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="0">8<tspan data-es=" pistas" font-size="9" font-weight="400"> airstrips</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.5871;0.5963" values="0;1;0"/></text>
+<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="0">9<tspan data-es=" pistas" font-size="9" font-weight="400"> airstrips</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.5963;0.6663" values="0;1;0"/></text>
+<text x="196" y="56" font-family="monospace" font-size="12" font-weight="700" fill="#e7e4dc" opacity="1">10<tspan data-es=" pistas" font-size="9" font-weight="400"> airstrips</tspan><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" calcMode="discrete" keyTimes="0.0000;0.2292;0.6663" values="1;0;1"/></text>
+<text data-es="a 25 NM o menos de la ruta" x="196" y="66" font-family="sans-serif" font-size="7" fill="#8b93a1">within 25 NM of the route</text>
+<g><animate attributeName="opacity" dur="12.0s" repeatCount="indefinite" keyTimes="0.0000;0.2083;0.2500;0.7333;0.7458;1.0000" values="1;1;0;0;1;1"/><text x="196" y="86" font-family="monospace" font-size="12" font-weight="700" fill="#e0705f">99 NM<tspan data-es=" tramo" font-size="9" font-weight="400"> gap</tspan></text><text data-es="el más largo sin pista, en rojo" x="196" y="96" font-family="sans-serif" font-size="7" fill="#8b93a1">longest with no airstrip, in red</text></g>
 </svg>
 
-            <p class="app-desc"><strong>Enroute Options:</strong> type a route across Mexico to list every airstrip and airport within 10, 25 or 50 NM &mdash; filter by runway, surface and permit, spot the longest gap with nowhere to land, and send the airstrip options to ForeFlight.</p>
+            <p class="app-desc" data-es="<strong>Opciones en ruta:</strong> escribe una ruta sobre México para ver cada pista y aeropuerto a 10, 25 o 50 NM &mdash; filtra por longitud de pista, superficie y permiso, ubica el tramo más largo sin dónde aterrizar y manda las opciones a ForeFlight."><strong>Enroute Options:</strong> type a route across Mexico to list every airstrip and airport within 10, 25 or 50 NM &mdash; filter by runway, surface and permit, spot the longest gap with nowhere to land, and send the airstrip options to ForeFlight.</p>
           </a>
         </div>
       </section>
 
       <section class="app-group g-safe" aria-labelledby="grp-safe">
-        <h2 class="group-label" id="grp-safe">Safety Stats</h2>
+        <h2 class="group-label" data-es="Estadísticas de seguridad" id="grp-safe">Safety Stats</h2>
         <div class="app-row row-1">
-          <a class="app-cell" href="https://piston-ga-stats.netlify.app/" aria-label="Open GA Accident Stats">
-            <h3 class="app-name">GA Accident Stats</h3>
+          <a class="app-cell" href="https://piston-ga-stats.netlify.app/" data-es-aria-label="Abrir GA Accident Stats" aria-label="Open GA Accident Stats">
+            <h3 class="app-name" data-es="GA Accident Stats<span class=&quot;en-only&quot;>solo en inglés</span>">GA Accident Stats</h3>
             <svg class="app-preview preview-wide" viewBox="0 0 400 104" role="img" aria-label="Type A versus Type B accident-rate bars with 95% range whiskers, and a funnel plot placing every type in its category against the category average">
               <rect width="400" height="104" fill="#1b222c"/>
               <text x="10" y="16" font-family="monospace" font-size="7.5" fill="#8b93a1" letter-spacing="0.6">ACCIDENTS / 1,000 ACFT-YR</text>
@@ -592,16 +703,16 @@
               <circle cx="276" cy="66" r="3.8" fill="#c4820f"/>
               <circle cx="294" cy="46" r="3.8" fill="#4d94f0"/>
             </svg>
-            <p class="app-desc">Compare piston and turboprop types, Cessna to PC-12, using NTSB accident records back to 1982: rates per 1,000 registered aircraft, where each type sits in its category (a zoomable funnel plot), and what tends to go wrong.</p>
+            <p class="app-desc" data-es="Compara tipos de pistón y turbohélice, del Cessna al PC-12, con los registros de accidentes de la NTSB desde 1982: tasas por cada 1,000 aeronaves registradas, dónde queda cada tipo dentro de su categoría (una gráfica de embudo con zoom) y qué suele salir mal.">Compare piston and turboprop types, Cessna to PC-12, using NTSB accident records back to 1982: rates per 1,000 registered aircraft, where each type sits in its category (a zoomable funnel plot), and what tends to go wrong.</p>
           </a>
           </div>
       </section>
 
       <section class="app-group g-wx" aria-labelledby="grp-wx">
-        <h2 class="group-label" id="grp-wx">Weather, Avionics &amp; Your EFB</h2>  <!-- v1.28: was Weather & Avionics -->
+        <h2 class="group-label" data-es="Meteorología, aviónica y tu EFB" id="grp-wx">Weather, Avionics &amp; Your EFB</h2>  <!-- v1.28: was Weather & Avionics -->
         <div class="app-row row-3">
-          <a class="app-cell" href="https://weather-history-probability.netlify.app" aria-label="Open Weather History and Probability">
-            <h3 class="app-name">Weather History and Probability</h3>
+          <a class="app-cell" href="https://weather-history-probability.netlify.app" data-es-aria-label="Abrir Weather History and Probability" aria-label="Open Weather History and Probability">
+            <h3 class="app-name" data-es="Weather History and Probability<span class=&quot;en-only&quot;>solo en inglés</span>">Weather History and Probability</h3>
             <svg class="app-preview" viewBox="0 0 200 56" preserveAspectRatio="none" role="img" aria-label="Bar chart of monthly favorable-weather odds">
               <rect width="200" height="56" fill="#0d1117"/>
               <line x1="0" y1="26" x2="200" y2="26" stroke="#5b6472" stroke-width="1" stroke-dasharray="3,3"/>
@@ -616,10 +727,10 @@
               <rect x="166" y="6"  width="14" height="46" fill="#3ecb86"/>
               <rect x="186" y="13" width="10" height="39" fill="#3ecb86"/>
             </svg>
-            <p class="app-desc">Pulls historical NOAA weather for any U.S. airport and works out the odds of VFR, clear skies, or fog for whatever date range and time window you're planning around.</p>
+            <p class="app-desc" data-es="Obtiene el historial meteorológico de NOAA de cualquier aeropuerto de EE. UU. y calcula la probabilidad de VFR, cielo despejado o niebla para las fechas y el horario que estés planeando.">Pulls historical NOAA weather for any U.S. airport and works out the odds of VFR, clear skies, or fog for whatever date range and time window you're planning around.</p>
           </a>
-            <a class="app-cell" href="https://digital-autopilots-quiz.netlify.app/" aria-label="Open Know the Score(board)? – a Quiz">
-            <h3 class="app-name">Know the Score(board)? &ndash; a Quiz</h3>
+            <a class="app-cell" href="https://digital-autopilots-quiz.netlify.app/" data-es-aria-label="Abrir Know the Score(board)? – a Quiz" aria-label="Open Know the Score(board)? – a Quiz">
+            <h3 class="app-name" data-es="Know the Score(board)? &ndash; a Quiz<span class=&quot;en-only&quot;>solo en inglés</span>">Know the Score(board)? &ndash; a Quiz</h3>
             <svg class="app-preview" viewBox="0 0 200 40" preserveAspectRatio="none" role="img" aria-label="Autopilot scoreboard reading GPS, HDG, AP, ALT, GP">
               <rect width="200" height="40" fill="#6e6e6e"/>
               <rect x="80" y="0" width="40" height="40" fill="#8a8a8a"/>
@@ -633,11 +744,11 @@
               <text x="140" y="25" font-family="monospace" font-weight="bold" font-size="13" fill="#35d07f" text-anchor="middle">ALT</text>
               <text x="180" y="25" font-family="monospace" font-weight="bold" font-size="13" fill="#f2f2f2" text-anchor="middle">GP</text>
             </svg>
-            <p class="app-desc">Develops and exhibits a solid understanding of how the Command Line (aka Scoreboard) is the critical check on your navigation and autopilot settings.</p>
+            <p class="app-desc" data-es="Desarrolla y demuestra que entiendes bien por qué la Command Line (o Scoreboard) es la verificación clave de tu navegación y de los ajustes del piloto automático.">Develops and exhibits a solid understanding of how the Command Line (aka Scoreboard) is the critical check on your navigation and autopilot settings.</p>
           </a>
           <!-- v1.28 (21-Nov-2026): moved here from New at Wayne's request; its flow dots are now still (only New cards animate) -->
-          <a class="app-cell" href="https://claude-foreflight-primer.netlify.app/" aria-label="Open Claude + ForeFlight Primer">
-            <h3 class="app-name">Claude + ForeFlight Primer</h3>
+          <a class="app-cell" href="https://claude-foreflight-primer.netlify.app/" data-es-aria-label="Abrir Claude + ForeFlight Primer" aria-label="Open Claude + ForeFlight Primer">
+            <h3 class="app-name" data-es="Claude + ForeFlight Primer<span class=&quot;en-only&quot;>solo en inglés</span>">Claude + ForeFlight Primer</h3>
             <svg class="app-preview preview-wide" viewBox="0 0 400 104" role="img" aria-label="Claude and ForeFlight linked by a connector: your flights and data flow to Claude, new flights flow back">
               <rect width="400" height="104" fill="#0d1117"/>
               <rect x="8" y="8" width="128" height="88" rx="10" fill="#1b222c" stroke="#3a4454" stroke-width="1.5"/>
@@ -667,7 +778,7 @@
               <g fill="#f5a623"><circle cx="232" cy="33.3" r="3.6"/><circle cx="200" cy="31" r="3.6"/><circle cx="168" cy="33.3" r="3.6"/></g>
               <circle cx="200" cy="75" r="3.6" fill="#3fa7a0"/>
             </svg>
-            <p class="app-desc">Why and how to connect Claude to your ForeFlight account, step by step, then one real trip &mdash; an Oregon coast weekend &mdash; researched, planned and filed into ForeFlight from a single Claude chat. Narrated.</p>
+            <p class="app-desc" data-es="Por qué y cómo conectar Claude a tu cuenta de ForeFlight, paso a paso, y luego un viaje real &mdash; un fin de semana en la costa de Oregón &mdash; investigado, planeado y enviado a ForeFlight desde un solo chat con Claude. Narrado.">Why and how to connect Claude to your ForeFlight account, step by step, then one real trip &mdash; an Oregon coast weekend &mdash; researched, planned and filed into ForeFlight from a single Claude chat. Narrated.</p>
           </a>
           </div>
       </section>
@@ -675,8 +786,8 @@
       <section class="app-group g-atc" aria-labelledby="grp-atc">
         <h2 class="group-label" id="grp-atc">ATC</h2>
         <div class="app-row row-3">
-          <a class="app-cell" href="https://tec-route-lookup.netlify.app/" aria-label="Open TEC Route Lookup">
-            <h3 class="app-name">TEC Route Lookup</h3>
+          <a class="app-cell" href="https://tec-route-lookup.netlify.app/" data-es-aria-label="Abrir TEC Route Lookup" aria-label="Open TEC Route Lookup">
+            <h3 class="app-name" data-es="TEC Route Lookup<span class=&quot;en-only&quot;>solo en inglés</span>">TEC Route Lookup</h3>
             <svg class="app-preview" viewBox="0 0 200 56" preserveAspectRatio="none" role="img" aria-label="Sample TEC route card reading SBAQ24, HENER V186 DARTS V597 OCN">
               <rect width="200" height="56" fill="#1b222c"/>
               <rect x="0" y="0" width="3" height="56" fill="#f5a623"/>
@@ -687,10 +798,10 @@
               <rect x="10" y="44" width="80" height="9" rx="3" fill="#10141a"/>
               <text x="14" y="51" font-family="sans-serif" font-size="6.5" fill="#8b93a1">Altitude/class: PQ90</text>
             </svg>
-            <p class="app-desc">Looks up Tower Enroute Control routes straight from the FAA's own preferred-routes database &mdash; not simulator data &mdash; filtered by aircraft type and LAX's landing configuration.</p>
+            <p class="app-desc" data-es="Busca rutas Tower Enroute Control directamente en la base de datos de rutas preferentes de la FAA &mdash; no en datos de simulador &mdash; filtradas por tipo de aeronave y por la configuración de aterrizaje de LAX.">Looks up Tower Enroute Control routes straight from the FAA's own preferred-routes database &mdash; not simulator data &mdash; filtered by aircraft type and LAX's landing configuration.</p>
           </a>
-            <a class="app-cell" href="https://clearance-delivery.netlify.app/" aria-label="Open Clearance Delivery Trainer">
-            <h3 class="app-name">Clearance Delivery Trainer</h3>
+            <a class="app-cell" href="https://clearance-delivery.netlify.app/" data-es-aria-label="Abrir Clearance Delivery Trainer" aria-label="Open Clearance Delivery Trainer">
+            <h3 class="app-name" data-es="Clearance Delivery Trainer<span class=&quot;en-only&quot;>solo en inglés</span>">Clearance Delivery Trainer</h3>
             <svg class="app-preview preview-strip" viewBox="0 0 300 62" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Route strip: cleared to KPOC via KSBA, KWANG, CMA, VNY, Victor 186, PDZ, KPOC">
               <rect width="300" height="62" fill="#1b222c"/>
               <text x="12" y="13" font-family="monospace" font-size="8.5" font-weight="600" fill="#f5a623">CLEARED TO KPOC</text>
@@ -715,10 +826,10 @@
               <text x="236" y="52" font-family="monospace" font-size="8" fill="#8b93a1" text-anchor="middle">PDZ</text>
               <text x="282" y="52" font-family="monospace" font-size="8" fill="#8b93a1" text-anchor="middle">KPOC</text>
             </svg>
-            <p class="app-desc">Call Clearance Delivery, hear your IFR clearance, copy it in CRAFT shorthand, then key Push to Talk and read it back &mdash; Clearance Delivery corrects anything you miss. Routes come from the FAA's preferred-route and TEC database plus recent real ATC clearances.</p>
+            <p class="app-desc" data-es="Llama a Clearance Delivery, escucha tu autorización IFR, cópiala en taquigrafía CRAFT, luego oprime Push to Talk y colaciónala &mdash; Clearance Delivery corrige lo que se te escape. Las rutas vienen de la base de datos de rutas preferentes y TEC de la FAA y de autorizaciones reales recientes de ATC.">Call Clearance Delivery, hear your IFR clearance, copy it in CRAFT shorthand, then key Push to Talk and read it back &mdash; Clearance Delivery corrects anything you miss. Routes come from the FAA's preferred-route and TEC database plus recent real ATC clearances.</p>
           </a>
-            <a class="app-cell" href="https://atc-chair-fly-trainer.netlify.app" aria-label="Open ATC Chair-Fly Trainer">
-            <h3 class="app-name">ATC Chair-Fly Trainer</h3>
+            <a class="app-cell" href="https://atc-chair-fly-trainer.netlify.app" data-es-aria-label="Abrir ATC Chair-Fly Trainer" aria-label="Open ATC Chair-Fly Trainer">
+            <h3 class="app-name" data-es="ATC Chair-Fly Trainer<span class=&quot;en-only&quot;>solo en inglés</span>">ATC Chair-Fly Trainer</h3>
             <svg class="app-preview" viewBox="0 0 200 56" preserveAspectRatio="none" role="img" aria-label="HDG and ALT knobs with annunciator lights, from the chair-fly trainer panel">
               <rect width="200" height="56" fill="#3a4454" stroke="#4d596b" stroke-width="1"/>
               <rect x="80"  y="6" width="8" height="8" rx="2" fill="#10141a" stroke="#2a323f"/>
@@ -731,16 +842,16 @@
               <text x="40"  y="50" font-family="sans-serif" font-size="8" fill="#f5a623" text-anchor="middle">HDG</text>
               <text x="160" y="50" font-family="sans-serif" font-size="8" fill="#f5a623" text-anchor="middle">ALT</text>
             </svg>
-            <p class="app-desc">Fires a random ATC instruction at you and times whether you set it up and read it back correctly &mdash; chair-flying practice for the Listen, Set, Read Back habit.</p>
+            <p class="app-desc" data-es="Te lanza una instrucción de ATC al azar y mide si la configuras y la colacionas correctamente &mdash; práctica en tierra (chair-flying) del hábito Escuchar, Configurar, Colacionar.">Fires a random ATC instruction at you and times whether you set it up and read it back correctly &mdash; chair-flying practice for the Listen, Set, Read Back habit.</p>
           </a>
           </div>
       </section>
 
       <section class="app-group g-plan" aria-labelledby="grp-plan">
-        <h2 class="group-label" id="grp-plan">Time, Route &amp; Fuel Planning</h2>  <!-- v1.32: was Time & Fuel Planning (Wayne) -->
+        <h2 class="group-label" data-es="Planeación de tiempo, ruta y combustible" id="grp-plan">Time, Route &amp; Fuel Planning</h2>  <!-- v1.32: was Time & Fuel Planning (Wayne) -->
         <div class="app-row">
-          <a class="app-cell" href="https://days-flight-schedule.netlify.app/" aria-label="Open Day's Flight Schedule">
-            <h3 class="app-name">Day's Flight Schedule</h3>
+          <a class="app-cell" href="https://days-flight-schedule.netlify.app/" data-es-aria-label="Abrir Day's Flight Schedule" aria-label="Open Day's Flight Schedule">
+            <h3 class="app-name" data-es="Day's Flight Schedule<span class=&quot;en-only&quot;>solo en inglés</span>">Day's Flight Schedule</h3>
             <svg class="app-preview preview-strip" viewBox="-40 0 280 68" preserveAspectRatio="none" role="img" aria-label="Timeline of a flying day: depart home/hotel at KSBA wheels-up, stops at KSDM and MMSF, arrive home/hotel at MMLT, with calculated times above each">
               <rect x="-40" width="280" height="68" fill="#1b222c"/>
               <line x1="16" y1="28" x2="184" y2="28" stroke="#3a4454" stroke-width="2"/>
@@ -761,10 +872,10 @@
               <text x="184" y="55" font-family="sans-serif" font-size="7" font-weight="700" fill="#8b93a1" text-anchor="start">arrive</text>
               <text x="184" y="64" font-family="sans-serif" font-size="7" font-weight="700" fill="#8b93a1" text-anchor="start">home/hotel</text>
             </svg>
-            <p class="app-desc">Plans a flying day of up to five legs &mdash; enter wheels-up time plus each leg's airports, ETE, and fuel, and it works out every clock time from leaving home to arriving destination. Or let Claude pull ETE and fuel from ForeFlight; saved days sync across your devices.</p>
+            <p class="app-desc" data-es="Planea un día de vuelo de hasta cinco tramos &mdash; anota la hora de despegue y, por tramo, los aeropuertos, el ETE y el combustible, y calcula cada hora desde que sales de casa hasta que llegas al destino. O deja que Claude tome el ETE y el combustible de ForeFlight; los días guardados se sincronizan entre tus dispositivos.">Plans a flying day of up to five legs &mdash; enter wheels-up time plus each leg's airports, ETE, and fuel, and it works out every clock time from leaving home to arriving destination. Or let Claude pull ETE and fuel from ForeFlight; saved days sync across your devices.</p>
           </a>
-            <a class="app-cell" href="https://fuel-to-add.netlify.app/" aria-label="Open How Much Fuel to Add?">
-            <h3 class="app-name">How Much Fuel to Add?</h3>
+            <a class="app-cell" href="https://fuel-to-add.netlify.app/" data-es-aria-label="Abrir How Much Fuel to Add?" aria-label="Open How Much Fuel to Add?">
+            <h3 class="app-name" data-es="How Much Fuel to Add?<span class=&quot;en-only&quot;>solo en inglés</span>">How Much Fuel to Add?</h3>
             <svg class="app-preview" viewBox="0 0 200 56" preserveAspectRatio="none" role="img" aria-label="Equation: 42.0 minus 30.0 equals 12.0 gallons to add, split into 6.0 gallons left and 6.0 gallons right tank">
               <rect width="200" height="56" fill="#1b222c"/>
               <text x="100" y="27" font-family="monospace" font-size="14" text-anchor="middle">
@@ -775,17 +886,17 @@
               <rect x="104" y="36" width="92" height="16" rx="3" fill="#2a323f" stroke="#3a4454"/>
               <text x="150" y="47.5" font-family="monospace" font-size="9.5" fill="#8b93a1" text-anchor="middle">R&#8195;<tspan fill="#f5a623">6.0 gal</tspan></text>
             </svg>
-            <p class="app-desc">Enter the fuel you'll have after the current leg and the minimum you need for the next &mdash; alternate and reserve included &mdash; and it works out how much to add, in gallons and liters, total and per side.</p>
+            <p class="app-desc" data-es="Anota el combustible que tendrás al terminar el tramo actual y el mínimo que necesitas para el siguiente &mdash; alterno y reserva incluidos &mdash; y calcula cuánto cargar, en galones y litros, total y por lado.">Enter the fuel you'll have after the current leg and the minimum you need for the next &mdash; alternate and reserve included &mdash; and it works out how much to add, in gallons and liters, total and per side.</p>
           </a>
 
           </div>
       </section>
 
       <section class="app-group g-ref" aria-labelledby="grp-ref">
-        <h2 class="group-label" id="grp-ref">Checklists &amp; Reference</h2>
+        <h2 class="group-label" data-es="Listas de verificación y referencia" id="grp-ref">Checklists &amp; Reference</h2>
         <div class="app-row">
-          <a class="app-cell is-link" href="https://docs.google.com/forms/d/e/1FAIpQLSeC85xp_2sJYuEMtDPEHGM1Ufx0AhK6ar_kD09e34FjV92WuQ/viewform?usp=header" target="_blank" rel="noopener" aria-label="Open Flying Yourself to Mexico? checklist (Google Form, opens in a new window)">
-            <h3 class="app-name">Flying Yourself to Mexico?</h3>
+          <a class="app-cell is-link" href="https://docs.google.com/forms/d/e/1FAIpQLSeC85xp_2sJYuEMtDPEHGM1Ufx0AhK6ar_kD09e34FjV92WuQ/viewform?usp=header" target="_blank" rel="noopener" data-es-aria-label="Abrir la lista ¿Vas a volar tu propio avión a México? (formulario de Google, en inglés; se abre en otra ventana)" aria-label="Open Flying Yourself to Mexico? checklist (Google Form, opens in a new window)">
+            <h3 class="app-name" data-es="¿Vas a volar tu propio avión a México?<span class=&quot;en-only&quot;>solo en inglés</span>">Flying Yourself to Mexico?</h3>
             <svg class="app-preview" viewBox="0 0 200 56" preserveAspectRatio="none" role="img" aria-label="Checklist: eAPIS filed and entry permit checked, pesos onboard not yet checked; KSBA to MMLT across the border">
               <rect width="200" height="56" fill="#1b222c"/>
               <rect x="8" y="6" width="10" height="10" rx="2" fill="#10141a" stroke="#3fa7a0"/>
@@ -805,12 +916,12 @@
               <text x="112" y="14" font-family="monospace" font-size="7.5" fill="#8b93a1" text-anchor="middle">KSBA</text>
               <text x="188" y="14" font-family="monospace" font-size="7.5" fill="#8b93a1" text-anchor="middle">MMLT</text>
             </svg>
-            <p class="app-desc">A checklist for flying your own plane across the border &mdash; subscriptions and permits, eAPIS and flight-plan filings, what goes in the binder, and what to have onboard. Make a copy and customize it for your trip.</p>
-            <span class="link-tag">Opens Google Form &#8599;</span>
+            <p class="app-desc" data-es="Una lista de verificación para cruzar la frontera en tu propio avión &mdash; suscripciones y permisos, eAPIS y planes de vuelo, qué va en la carpeta y qué llevar a bordo. Haz una copia y adáptala a tu viaje.">A checklist for flying your own plane across the border &mdash; subscriptions and permits, eAPIS and flight-plan filings, what goes in the binder, and what to have onboard. Make a copy and customize it for your trip.</p>
+            <span class="link-tag" data-es="Abre formulario de Google &#8599;">Opens Google Form &#8599;</span>
           </a>
             <!-- v1.23: /reference = the Doc as an inline PDF (print layout, light pages); netlify/functions/reference.mjs -->
-            <a class="app-cell is-link" href="/reference" target="_blank" rel="noopener" aria-label="Open GeezerGeek Coach Reference Materials (PDF of the Google Doc, opens in a new window)">
-            <h3 class="app-name">GeezerGeek Coach Reference Materials</h3>
+            <a class="app-cell is-link" href="/reference" target="_blank" rel="noopener" data-es-aria-label="Abrir Material de referencia de GeezerGeek Coach (PDF del documento de Google, en inglés; se abre en otra ventana)" aria-label="Open GeezerGeek Coach Reference Materials (PDF of the Google Doc, opens in a new window)">
+            <h3 class="app-name" data-es="Material de referencia de GeezerGeek Coach<span class=&quot;en-only&quot;>solo en inglés</span>">GeezerGeek Coach Reference Materials</h3>
             <svg class="app-preview" viewBox="0 0 200 56" preserveAspectRatio="none" role="img" aria-label="Three tabbed reference binders beside an open document page">
               <rect width="200" height="56" fill="#1b222c"/>
               <rect x="14" y="8"  width="14" height="42" rx="2" fill="#3fa7a0"/>
@@ -829,22 +940,22 @@
               <rect x="94" y="39" width="58" height="2.5" rx="1" fill="#5b6472"/>
               <rect x="94" y="45" width="66" height="2.5" rx="1" fill="#5b6472"/>
             </svg>
-            <p class="app-desc">The reference library behind the GeezerGeek Coach sessions &mdash; background reading and source material, collected in one Google Doc.</p>
-            <span class="link-tag">Opens PDF of Google Doc &#8599;</span>
+            <p class="app-desc" data-es="La biblioteca de referencia detrás de las sesiones de GeezerGeek Coach &mdash; lecturas de fondo y material de consulta, reunidos en un documento de Google.">The reference library behind the GeezerGeek Coach sessions &mdash; background reading and source material, collected in one Google Doc.</p>
+            <span class="link-tag" data-es="Abre PDF del documento de Google &#8599;">Opens PDF of Google Doc &#8599;</span>
           </a>
           </div>
       </section>
     </div>
 
-    <p class="disclaimer">Disclaimer: I am neither a ground instructor nor a flight instructor. All information is for general background and should be verified with a certified flight instructor and your own research.</p>
+    <p class="disclaimer" data-es="Aviso: no soy instructor de tierra ni instructor de vuelo. Toda la información es de carácter general y debe verificarse con un instructor de vuelo certificado y con tu propia investigación.">Disclaimer: I am neither a ground instructor nor a flight instructor. All information is for general background and should be verified with a certified flight instructor and your own research.</p>
 
-    <!-- GGP-FOOTER START v1.14 · 13-Nov-2026 · shared footer, App Conventions §5a · master: Control Panel repo tools/ggp-footer -->
+    <!-- GGP-FOOTER START v1.15 · 25-Nov-2026 · shared footer, App Conventions §5a · master: Control Panel repo tools/ggp-footer -->
 <footer class="ggp-footer">
-  <div class="ggp-credit">Wayne McClelland (<a href="https://geezer-geek-pilot-control-panel.netlify.app/airports/" target="_blank" rel="noopener">airports visited</a>), <a href="https://youtube.com/@GeezerGeekPilot" target="_blank" rel="noopener">GeezerGeek Pilot</a>, <a href="https://geezer-geek-pilot-control-panel.netlify.app/reference" target="_blank" rel="noopener">Reference Materials</a></div>
+  <div class="ggp-credit">Wayne McClelland (<a href="https://geezer-geek-pilot-control-panel.netlify.app/airports/" target="_blank" rel="noopener" data-es="aeropuertos visitados">airports visited</a>), <a href="https://youtube.com/@GeezerGeekPilot" target="_blank" rel="noopener">GeezerGeek Pilot</a>, <a href="https://geezer-geek-pilot-control-panel.netlify.app/reference" target="_blank" rel="noopener" data-es="Material de referencia">Reference Materials</a></div>
   <div class="ggp-count" id="ggpCount" data-base="300" data-href="stats/"></div>
   <div class="ggp-actions">
-    <button class="ggp-pill ggp-share" type="button"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/></svg><span>Share GeezerGeek Pilot Apps with pilot friends</span></button>
-    <button class="ggp-pill" id="installBtn" type="button" style="display:none;"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"/><polyline points="7 8 12 3 17 8"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg><span>Add this app to Home Screen</span></button>
+    <button class="ggp-pill ggp-share" type="button"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/></svg><span data-es="Comparte las apps de GeezerGeek Pilot con amigos pilotos">Share GeezerGeek Pilot Apps with pilot friends</span></button>
+    <button class="ggp-pill" id="installBtn" type="button" style="display:none;"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"/><polyline points="7 8 12 3 17 8"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg><span data-es="Agrega esta app a tu pantalla de inicio">Add this app to Home Screen</span></button>
   </div>
 </footer>
 <!-- GGP-FOOTER END -->
@@ -853,11 +964,14 @@
   <div class="install-overlay" id="installOverlay">
     <div class="install-card">
       <p id="installText"></p>
-      <button class="install-close" id="installClose" type="button">Got it</button>
+      <button class="install-close" id="installClose" type="button" data-es="Entendido">Got it</button>
     </div>
   </div>
 
 <script>
+  // v1.37: Spanish text goes in first (shared language core, App Conventions "Language"), before anything below reads the page
+  if (window.ggpLang) ggpLang.apply();
+
   // --- Add to Home Screen ---
   const installBtn = document.getElementById('installBtn');
   const installOverlay = document.getElementById('installOverlay');
@@ -897,11 +1011,11 @@
       return;
     }
     if (isIOS) {
-      showInstallOverlay('On your iPhone or iPad: tap the Share icon in Safari\u2019s toolbar, then choose \u201cAdd to Home Screen.\u201d');
+      showInstallOverlay(ggpLang.L('On your iPhone or iPad: tap the Share icon in Safari\u2019s toolbar, then choose \u201cAdd to Home Screen.\u201d', 'En tu iPhone o iPad: toca el \u00edcono Compartir en la barra de Safari y elige \u201cAgregar a pantalla de inicio\u201d.'));
     } else if (isMac && isSafari) {
-      showInstallOverlay('On your Mac: in Safari\u2019s menu bar, choose File \u2192 Add to Dock. (Safari 17 or later required.)');
+      showInstallOverlay(ggpLang.L('On your Mac: in Safari\u2019s menu bar, choose File \u2192 Add to Dock. (Safari 17 or later required.)', 'En tu Mac: en la barra de men\u00fas de Safari, elige Archivo \u2192 Agregar al Dock. (Requiere Safari 17 o posterior.)'));
     } else {
-      showInstallOverlay('Look for an install icon in your browser\u2019s address bar, or check your browser\u2019s menu for \u201cInstall App\u201d or \u201cAdd to Home Screen.\u201d');
+      showInstallOverlay(ggpLang.L('Look for an install icon in your browser\u2019s address bar, or check your browser\u2019s menu for \u201cInstall App\u201d or \u201cAdd to Home Screen.\u201d', 'Busca un \u00edcono de instalar en la barra de direcciones de tu navegador, o revisa su men\u00fa: \u201cInstalar app\u201d o \u201cAgregar a pantalla de inicio\u201d.'));
     }
   });
 
@@ -935,26 +1049,29 @@
     const left = g.querySelectorAll('.app-cell').length;
     if (!left) { g.remove(); return; }
     if (now > new Date(g.dataset.newUntil + 'T23:59:59')) {   // cards with nowhere to go stay, under the permanent label
-      g.classList.remove('is-new'); g.querySelector('.group-label').innerHTML = g.dataset.afterLabel;
+      g.classList.remove('is-new'); g.querySelector('.group-label').innerHTML = (window.ggpLang && ggpLang.es && g.dataset.afterLabelEs) || g.dataset.afterLabel;
     }
     if (still || !g.classList.contains('is-new')) stillSvg(g);
   });
 </script>
-<!-- GGP-FOOTER-JS START v1.14 · 13-Nov-2026 · shared footer script, App Conventions §6a/§6b · master: Control Panel repo tools/ggp-footer -->
+<!-- GGP-FOOTER-JS START v1.15 · 25-Nov-2026 · shared footer script, App Conventions §6a/§6b · master: Control Panel repo tools/ggp-footer -->
 <script>
 (() => {
   if (window.__ggpFooter) return;
   window.__ggpFooter = true;
   // Every app's footer share button shares the Control Panel, not the app itself.
-  const SHARE_URL   = 'https://geezer-geek-pilot-control-panel.netlify.app/';
-  const SHARE_TITLE = 'GeezerGeek Pilot Apps';
-  const SHARE_TEXT  = 'Planning, weather, ATC-practice and safety tools for GA pilots, from GeezerGeek Pilot.';
+  // v1.15: shared from a Spanish page, the link carries ?lang=es (Spanish preview card, Control Panel opens in Spanish)
+  const SHARE_URL   = 'https://geezer-geek-pilot-control-panel.netlify.app/' + (window.ggpLang && window.ggpLang.es ? '?lang=es' : '');
+  const SHARE_TITLE = window.ggpLang && window.ggpLang.es ? 'Apps de GeezerGeek Pilot' : 'GeezerGeek Pilot Apps';
+  const L = (en, es) => (window.ggpLang ? window.ggpLang.L(en, es) : en);
+  const SHARE_TEXT  = L('Planning, weather, ATC-practice and safety tools for GA pilots, from GeezerGeek Pilot.', 'Herramientas de planeación, meteorología, práctica de ATC y seguridad para pilotos de aviación general, de GeezerGeek Pilot.');
+  if (window.ggpLang) window.ggpLang.apply(document.querySelector('.ggp-footer') || document);
   const flash = (btn) => {
     if (btn.dataset.ggpBusy) return;
     btn.dataset.ggpBusy = '1';
     const label = btn.querySelector('span') || btn;
     const original = label.textContent;
-    label.textContent = label === btn ? 'Link copied!' : 'Link copied to clipboard!';
+    label.textContent = label === btn ? L('Link copied!', '¡Enlace copiado!') : L('Link copied to clipboard!', '¡Enlace copiado al portapapeles!');
     setTimeout(() => { label.textContent = original; delete btn.dataset.ggpBusy; }, 2200);
   };
   // One listener on the document, so it also covers footers an app draws later and any other
@@ -999,11 +1116,11 @@
       const note = document.createElement('div');
       note.className = 'ggp-fb-note';
       note.setAttribute('role', 'status');
-      note.innerHTML = 'No email app opened? Write to <b></b><button type="button">Copy address</button>';
+      note.innerHTML = L('No email app opened? Write to ', '¿No se abrió tu app de correo? Escribe a ') + '<b></b><button type="button">' + L('Copy address', 'Copiar dirección') + '</button>';
       note.querySelector('b').textContent = addr;
       note.querySelector('button').addEventListener('click', async (e) => {
-        try { await navigator.clipboard.writeText(addr); e.target.textContent = 'Copied'; }
-        catch (err) { e.target.textContent = 'Select it above'; }
+        try { await navigator.clipboard.writeText(addr); e.target.textContent = L('Copied', 'Copiada'); }
+        catch (err) { e.target.textContent = L('Select it above', 'Selecciónala arriba'); }
       });
       host.appendChild(note);
     }, 1500);
@@ -1013,6 +1130,9 @@
   // data-ggp-all="off" on their footer. The Quiz draws its footer later, so a missing footer still counts.
   if (!document.querySelector('.ggp-footer[data-ggp-all="off"]')) {
     fetch('https://tally.yuki.sh/counters/wamware/ggp-all', { method: 'POST' }).catch(() => { /* never block the app */ });
+    // v1.15: and, when the page opens in Spanish, wamware/ggp-es (opens in Spanish; its visitor = Spanish users)
+    if (window.ggpLang && window.ggpLang.es)
+      fetch('https://tally.yuki.sh/counters/wamware/ggp-es', { method: 'POST' }).catch(() => {});
   }
   // Open counter: shown only where the footer has #ggpCount (the Control Panel). Apps count silently.
   const countEl = document.getElementById('ggpCount');
@@ -1025,11 +1145,11 @@
         const base = parseInt(countEl.dataset.base, 10) || 0;  // pre-Tally opens, App Conventions §6b
         const n = d && typeof d.visit === 'number' ? d.visit + base : null;
         if (typeof n !== 'number') return;
-        const text = 'Opened ' + n.toLocaleString() + (n === 1 ? ' time' : ' times');
+        const text = L('Opened ', 'Abierta ') + n.toLocaleString('en-US') + (n === 1 ? L(' time', ' vez') : L(' times', ' veces'));
         const href = countEl.dataset.href;   // v1.4: the count links to the open-counts page
         if (href) {
           const a = document.createElement('a');
-          a.href = href; a.textContent = text; a.title = 'Open counts for every app';
+          a.href = href; a.textContent = text; a.title = L('Open counts for every app', 'Aperturas de cada app');
           countEl.replaceChildren(a);
         } else countEl.textContent = text;
       })

@@ -37,6 +37,9 @@ APPS = {   # Tally key -> live site
     'fuel-to-add': 'https://fuel-to-add.netlify.app/',
 }
 COUNTERS = list(APPS) + ['ggp-all']   # ggp-all: shared counter, its visitor = unique visitors across all apps
+# 25-Nov-2026 (footer v1.15): ggp-es = page opens in Spanish across the apps (visitor = Spanish users);
+# ggp-es-picked = times someone switched a page to Español
+COUNTERS += ['ggp-es', 'ggp-es-picked']
 
 # Outside sources (a small ranged GET, so big files aren't downloaded)
 UPSTREAMS = [
