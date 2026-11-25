@@ -101,6 +101,11 @@ def main(argv):
         ok = bool(d) and isinstance(d.get('visit'), int) and isinstance(d.get('visitor'), int)
         if ok:
             snapshot[key] = [d['visit'], d['visitor']]
+        # the Spanish counters only exist once someone has used Spanish: a 404 there means zero so far, not a fault
+        if not ok and status == 404 and key in ('ggp-es', 'ggp-es-picked'):
+            snapshot[key] = [0, 0]
+            add('Tally counters', key, True, 'not created yet (no Spanish use so far)')
+            continue
         add('Tally counters', key, ok, f"{d['visit']} opens, {d['visitor']} visitors" if ok else f'HTTP {status}')
 
     # 3. the apps' own Netlify functions
