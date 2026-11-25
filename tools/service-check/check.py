@@ -28,6 +28,7 @@ APPS = {   # Tally key -> live site
     'airfield-kml-builder': 'https://airfield-kml-builder.netlify.app/',
     'emergency-airstrips-mexico': 'https://emergency-airstrips-mexico.netlify.app/',   # 24-Nov-2026
     'piston-ga-stats': 'https://piston-ga-stats.netlify.app/',
+    'tracking-piston-ga-accidents': 'https://tracking-piston-ga-accidents.netlify.app/',   # 25-Nov-2026
     'weather-history-probability': 'https://weather-history-probability.netlify.app/',
     'digital-autopilots-quiz': 'https://digital-autopilots-quiz.netlify.app/',
     'tec-route-lookup': 'https://tec-route-lookup.netlify.app/',

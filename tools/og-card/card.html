@@ -1,7 +1,7 @@
 <!DOCTYPE html><html><head><meta charset="utf-8">
 <!-- Source for site/og-image.png (English) and site/og-image-es.png (Mexican Spanish, open card.html#es) — the link-preview card.
      Render at 1200x630, device scale 1.5 → 1800x945 PNG. Control Panel v1.37, 25-Nov-2026: both airstrip apps in the New row
-     (side by side, as on the Control Panel), the other nine in a 3×3 grid; Spanish twin for links shared with ?lang=es (Wayne). -->
+     (side by side, as on the Control Panel), the other nine in a 3×3 grid; v1.40 (25-Nov-2026): the two Safety apps share the first row, the other eight four to a row (12-column grid); Spanish twin for links shared with ?lang=es (Wayne). -->
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"><style>
 *{box-sizing:border-box;margin:0}
 html,body{width:1200px;height:630px;overflow:hidden}
@@ -22,10 +22,13 @@ h1 em{font-style:normal;color:#f5a623}
 .nc .n{font-size:21px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nc .d{font-size:17.5px;color:#9aa2ae;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nc .d b{color:#e7e4dc;font-weight:500}
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
-.t{background:#1b222c;border:1px solid #2a323f;border-left:5px solid var(--g);border-radius:8px;padding:0 14px;height:60px;display:flex;align-items:center;gap:10px;font-size:21px;overflow:hidden;font-weight:500;white-space:nowrap}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:11px;margin-top:13px}
+.t.w{grid-column:span 6}
+.t{background:#1b222c;border:1px solid #2a323f;border-left:5px solid var(--g);border-radius:8px;padding:0 12px;height:54px;display:flex;align-items:center;gap:8px;font-size:17px;grid-column:span 3;overflow:hidden;font-weight:500;white-space:nowrap}
 .t s{text-decoration:none;margin-left:auto;font-family:"IBM Plex Mono";font-size:12px;font-weight:500;letter-spacing:.06em;color:#8b93a1;border:1px solid #3a4454;border-radius:4px;padding:1px 5px;display:none}
 .es .t s{display:inline}
+.es .t{font-size:15px;gap:6px;padding:0 10px}
+.es .t s{font-size:11px;padding:0 4px}
 .foot{margin-top:auto;display:flex;justify-content:space-between;align-items:baseline;gap:20px}
 .url{font-family:"IBM Plex Mono";font-weight:500;font-size:22px;color:#f5a623}
 .lang{font-size:19px;color:#c9ccd2;font-weight:500}
@@ -39,7 +42,7 @@ h1 em{font-style:normal;color:#f5a623}
  <span><i style="background:#4d94f0"></i><t data-es="Meteorología y aviónica">Weather &amp; avionics</t></span>
  <span><i style="background:#f5a623"></i><t data-es="Práctica de ATC">ATC practice</t></span>
  <span><i style="background:#3fa7a0"></i><t data-es="Planeación">Planning</t></span>
- <b>11 APPS</b></div>
+ <b data-es="12 APPS">12 APPS</b></div>
 <div class="new">
  <div class="nc"><div class="h"><span class="badge" data-es="NUEVA">NEW</span><span class="n" data-es="Pistas mexicanas para tu EFB y simulador">Mexican Airstrips for your EFB and Sim</span></div>
   <div class="d" data-es="<b>Salida/Destino:</b> pistas de la AFAC a ForeFlight y X-Plane"><b>Departure/Destination:</b> AFAC airstrips to ForeFlight &amp; X-Plane</div></div>
@@ -47,7 +50,8 @@ h1 em{font-style:normal;color:#f5a623}
   <div class="d" data-es="<b>Opciones en ruta:</b> pistas a lo largo de tu ruta, a ForeFlight"><b>Enroute Options:</b> airstrips along your route, to ForeFlight</div></div>
 </div>
 <div class="grid">
- <div class="t" style="--g:#e2685c">GA Accident Stats<s>EN</s></div>
+ <div class="t w" style="--g:#e2685c">GA Accident Stats<s>EN</s></div>
+ <div class="t w" style="--g:#e2685c">Tracking Piston GA Accidents<s>EN</s></div>
  <div class="t" style="--g:#4d94f0">Weather History &amp; Probability<s>EN</s></div>
  <div class="t" style="--g:#4d94f0">Know the Score(board)? Quiz<s>EN</s></div>
  <div class="t" style="--g:#4d94f0">Claude + ForeFlight Primer<s>EN</s></div>

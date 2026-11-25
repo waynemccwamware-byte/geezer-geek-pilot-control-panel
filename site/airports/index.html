@@ -91,11 +91,11 @@ body.embed .mapbox{height:calc(100vh - 168px)}
 body.embed .panel{margin-top:8px}
 .ripple{fill:none;stroke:#f5a623;pointer-events:none}
 </style>
-<!-- GGP-FOOTER-CSS START v1.15 · 25-Nov-2026 · shared footer styles + language core, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
+<!-- GGP-FOOTER-CSS START v1.16 · 25-Nov-2026 · shared footer styles + language core, App Conventions §5b · master: Control Panel repo tools/ggp-footer -->
 <script>
 (function () {
   if (window.ggpLang) return;
-  var KEY = 'ggp-lang', I18N = false, SITES = ['geezer-geek-pilot-control-panel','weather-history-probability','digital-autopilots-quiz','tec-route-lookup','atc-chair-fly-trainer','days-flight-schedule','fuel-to-add','clearance-delivery','piston-ga-stats','claude-foreflight-primer','airfield-kml-builder','emergency-airstrips-mexico'];
+  var KEY = 'ggp-lang', I18N = false, SITES = ['geezer-geek-pilot-control-panel','weather-history-probability','digital-autopilots-quiz','tec-route-lookup','atc-chair-fly-trainer','days-flight-schedule','fuel-to-add','clearance-delivery','piston-ga-stats','claude-foreflight-primer','airfield-kml-builder','emergency-airstrips-mexico','tracking-piston-ga-accidents'];
   var q = null, saved = null, lang, explicit = false;
   try { q = new URLSearchParams(location.search).get('lang'); } catch (e) {}
   try { saved = localStorage.getItem(KEY); } catch (e) {}
@@ -278,7 +278,7 @@ body.embed .panel{margin-top:8px}
   <div class="card panel empty" id="panel">Tap a pin for airport details.</div>
   <p class="fine">Data: Wayne's ForeFlight logbook (departure, destination and airports in the Route field), simulator sessions left out; snapshot of 22-Nov-2026. Names and coordinates from ForeFlight, or from the OurAirports database where ForeFlight's logbook lookup had none.</p>
 </div>
-<!-- GGP-FOOTER START v1.15 · 25-Nov-2026 · shared footer, App Conventions §5a · master: Control Panel repo tools/ggp-footer -->
+<!-- GGP-FOOTER START v1.16 · 25-Nov-2026 · shared footer, App Conventions §5a · master: Control Panel repo tools/ggp-footer -->
 <footer class="ggp-footer" data-ggp-all="off">
   <div class="ggp-back"><a href="https://geezer-geek-pilot-control-panel.netlify.app/" data-es="&larr; Volver a las apps de GeezerGeek Pilot">&larr; Back to GeezerGeek Pilot Apps</a></div>
   <div class="ggp-credit">Wayne McClelland, <a href="https://youtube.com/@GeezerGeekPilot" target="_blank" rel="noopener">GeezerGeek Pilot</a>, <a href="https://geezer-geek-pilot-control-panel.netlify.app/reference" target="_blank" rel="noopener" data-es="Material de referencia">Reference Materials</a></div>
@@ -514,7 +514,7 @@ if(qs.has('tour')){
 }catch(err){showErr(err)}
 })();
 </script>
-<!-- GGP-FOOTER-JS START v1.15 · 25-Nov-2026 · shared footer script, App Conventions §6a/§6b · master: Control Panel repo tools/ggp-footer -->
+<!-- GGP-FOOTER-JS START v1.16 · 25-Nov-2026 · shared footer script, App Conventions §6a/§6b · master: Control Panel repo tools/ggp-footer -->
 <script>
 (() => {
   if (window.__ggpFooter) return;

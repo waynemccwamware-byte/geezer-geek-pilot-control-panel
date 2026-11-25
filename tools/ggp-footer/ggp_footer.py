@@ -20,7 +20,7 @@ import re
 import sys
 from pathlib import Path
 
-VERSION = 'v1.15 · 25-Nov-2026'
+VERSION = 'v1.16 · 25-Nov-2026'
 
 CONTROL_PANEL_URL = 'https://geezer-geek-pilot-control-panel.netlify.app/'
 # v1.14: the Control Panel's /reference function serves the Reference Materials Doc as an inline PDF
@@ -48,7 +48,8 @@ SHARE_TEXT = 'Planning, weather, ATC-practice and safety tools for GA pilots, fr
 # Switching language saves and reloads the page. Spanish is Mexican Spanish (tú), dates stay dd-mmm-yyyy (25-nov-2026).
 SITES = ['geezer-geek-pilot-control-panel', 'weather-history-probability', 'digital-autopilots-quiz', 'tec-route-lookup',
          'atc-chair-fly-trainer', 'days-flight-schedule', 'fuel-to-add', 'clearance-delivery', 'piston-ga-stats',
-         'claude-foreflight-primer', 'airfield-kml-builder', 'emergency-airstrips-mexico']   # <name>.netlify.app
+         'claude-foreflight-primer', 'airfield-kml-builder', 'emergency-airstrips-mexico',
+         'tracking-piston-ga-accidents']   # <name>.netlify.app (v1.16: + tracking-piston-ga-accidents)
 ES = {
     'back': '&larr; Volver a las apps de GeezerGeek Pilot',
     'airports': 'aeropuertos visitados',
@@ -106,6 +107,8 @@ APPS = {
     'airfield-kml-builder': dict(file='site/index.html', label='Mexican Airstrips for your EFB and Sim', es=True),
     # 23-Nov-2026: companion to Mexican Airstrips (Control Panel v1.32, Time, Route & Fuel Planning)
     'emergency-airstrips-mexico': dict(file='site/index.html', label='Planning Emergency Airstrips in Mexico', es=True),
+    # 25-Nov-2026: new app, on the Control Panel from v1.40 in Safety Stats
+    'tracking-piston-ga-accidents': dict(file='site/index.html', label='Tracking Piston GA Accidents'),
     'airports-visited': dict(repo='geezer-geek-pilot-control-panel', file='site/airports/index.html', label='Airports Visited',
                              credit_link=False, all_count=False),   # the page the credit links to
     # v1.4: open-counts page, linked from the Control Panel's "Opened N times" (Wayne, 02-Nov-2026)
