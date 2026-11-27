@@ -251,7 +251,7 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
 </head>
 <body>
 <div class="rig">
-  <div class="callsign-row"><h1>App Open Counts</h1><span class="ver mono">v1.10</span></div>
+  <div class="callsign-row"><h1>App Open Counts</h1><span class="ver mono">v1.11</span></div>
   <p class="purpose-line"><span class="purpose-label">Purpose:</span> How many times each GeezerGeek Pilot app has been opened, and by how many visitors, each list most first. Reading these numbers doesn't add to them.</p>
 
   <div class="cards">
@@ -372,13 +372,23 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
       if (c.tot.id === 'totOpens') c.tot.textContent = fmt(sum);
     });
     // v1.10: email subscribers (distinct confirmed addresses with pings on), from the app's own count-only endpoint
-    APPS.filter(a => a.subs).forEach(a => {
-      const el = CARDS[1].rows.get(a).querySelector('.subs');
-      fetch(a.subs, { cache: 'no-store' }).then(r => r.ok ? r.json() : null)
-        .then(d => { if (d && typeof d.subscribers === 'number')
-          el.innerHTML = `✉ <b>${fmt(d.subscribers)}</b> email subscriber${d.subscribers === 1 ? '' : 's'} to pings`; })
-        .catch(() => {});
-    });
+    // v1.11 (Wayne, 27-Nov-2026): the email subscriber count is fetched fresh on every entry to this page, including
+    // coming back to it (tab or app switch, Back) when the browser restores the page without reloading it.
+    function loadSubs() {
+      APPS.filter(a => a.subs).forEach(a => {
+        const row = CARDS[1].rows.get(a), el = row && row.querySelector('.subs');
+        if (!el) return;
+        fetch(a.subs + (a.subs.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null)
+          .then(d => { if (d && typeof d.subscribers === 'number')
+            el.innerHTML = `✉ <b>${fmt(d.subscribers)}</b> email subscriber${d.subscribers === 1 ? '' : 's'} to pings`; })
+          .catch(() => {});
+      });
+    }
+    let subsAt = 0;
+    const subsAgain = () => { if (Date.now() - subsAt > 3000) { subsAt = Date.now(); loadSubs(); } };
+    window.addEventListener('pageshow', e => { if (e.persisted) subsAgain(); });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') subsAgain(); });
+    loadSubs();
     // Visitors header: unique across all apps, from the shared Tally counter every app also hits (footer v1.12).
     fetch(tally('ggp-all'), { cache: 'no-store' })
       .then(r => r.ok ? r.json() : null)
