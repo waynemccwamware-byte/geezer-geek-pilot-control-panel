@@ -49,6 +49,10 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
 .bar{grid-column:1 / -1;height:4px;border-radius:2px;background:var(--bezel);overflow:hidden;margin-top:4px}
 .bar i{display:block;height:100%;width:0;background:var(--g,var(--amber));opacity:.8;transition:width .6s ease}
 .meta{grid-column:1 / -1;font-size:11px;color:var(--text-muted)}
+/* v1.10 (27-Nov-2026): email subscribers on Tracking Piston GA Accidents' Visitors row (a count only, never addresses) */
+.subs{grid-column:1 / -1;font-size:12px;color:var(--text-muted);margin-top:2px}
+.subs b{font-family:var(--mono);color:var(--text-primary);font-weight:600}
+.subs:empty{display:none}
 .es-line{margin:14px 4px 0;font-size:13px;color:var(--text-muted)} .es-line b{font-family:var(--mono);color:var(--text-primary);font-weight:500}
 .g-panel{--g:var(--amber)} .g-new{--g:#f2c94c} .g-wx{--g:#4d94f0} .g-atc{--g:#f5a623} .g-plan{--g:#3fa7a0} .g-safe{--g:#e2685c}
 @media (prefers-reduced-motion:reduce){.bar i{transition:none}}
@@ -247,7 +251,7 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
 </head>
 <body>
 <div class="rig">
-  <div class="callsign-row"><h1>App Open Counts</h1><span class="ver mono">v1.9</span></div>
+  <div class="callsign-row"><h1>App Open Counts</h1><span class="ver mono">v1.10</span></div>
   <p class="purpose-line"><span class="purpose-label">Purpose:</span> How many times each GeezerGeek Pilot app has been opened, and by how many visitors, each list most first. Reading these numbers doesn't add to them.</p>
 
   <div class="cards">
@@ -275,6 +279,7 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
     <p>“Visitors” counts distinct internet addresses (not people). Each app's row counts an address once for that app, so someone using three apps appears in three rows. The total at the top of the Visitors card counts each address once across all the apps, from 10-Nov-2026 when that shared count began; the Opened total adds up the rows.</p>
     <p>Since 09-Nov-2026 every app counts on Tally. Fuel and Weather counted elsewhere before that: their opens carry the earlier count forward, but their visitors start from 09-Nov-2026. The Control Panel's opens include 300 estimated from before it had a counter.</p>
     <p>“Per day” comes from a reading of every counter taken each night just after midnight Pacific time by the daily service check (history from 12-Nov-2026; the first day is partial). A day's bar is the increase between two readings. “New visitors” is the day's increase in distinct addresses: people seen for the first time, not everyone who visited that day. A faded bar covers less than a full day; a missed reading folds its days into the next bar.</p>
+    <p>“Email subscribers” (Tracking Piston GA Accidents) counts distinct email addresses that are confirmed, have pings turned on, and have at least one rule or watch that can send a ping. The author's own address is included. Only the number is read; no address leaves that app. In “Per day” it's plotted as the count at each nightly reading (from 28-Nov-2026), not a daily increase.</p>
     <p>Read <span class="asof" id="asof">—</span>.</p>
   </div>
 </div>
@@ -304,7 +309,7 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
     { name: 'GeezerGeek Pilot Apps (Control Panel)', url: '../', g: 'g-panel', key: 'geezer-geek-pilot-control-panel', base: 300 },
     { name: 'Claude + ForeFlight Primer',      url: 'https://claude-foreflight-primer.netlify.app/',     g: 'g-new',  key: 'claude-foreflight-primer' },
     { name: 'GA Accident Stats',               url: 'https://piston-ga-stats.netlify.app/',              g: 'g-safe', key: 'piston-ga-stats' },
-    { name: 'Tracking Piston GA Accidents',    url: 'https://tracking-piston-ga-accidents.netlify.app/', g: 'g-safe', key: 'tracking-piston-ga-accidents', since: '25-Nov-2026' },   // v1.9
+    { name: 'Tracking Piston GA Accidents',    url: 'https://tracking-piston-ga-accidents.netlify.app/', g: 'g-safe', key: 'tracking-piston-ga-accidents', since: '25-Nov-2026', subs: 'https://tracking-piston-ga-accidents.netlify.app/.netlify/functions/api?op=subscribers' },   // v1.9; subs v1.10
     { name: 'Weather History and Probability', url: 'https://weather-history-probability.netlify.app/',  g: 'g-wx',   key: 'weather-history-probability', base: 385, since: '09-Nov-2026' },
     { name: 'Know the Score(board)? – a Quiz', url: 'https://digital-autopilots-quiz.netlify.app/',      g: 'g-wx',   key: 'digital-autopilots-quiz' },
     { name: 'TEC Route Lookup',                url: 'https://tec-route-lookup.netlify.app/',             g: 'g-atc',  key: 'tec-route-lookup' },
@@ -326,7 +331,7 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
       meta: a => a.base ? (a.since ? `includes ${fmt(a.base)} counted before ${a.since}` : `includes ${fmt(a.base)} estimated before counting began`) : '' },
     { list: document.getElementById('listVisitors'), tot: document.getElementById('totVisitors'),
       val: a => a.data && typeof a.data.visitor === 'number' ? a.data.visitor : null,
-      meta: a => a.since ? `since ${a.since}` : '' },
+      meta: a => a.since ? `since ${a.since}` : '', subs: true },
   ];
   CARDS.forEach(c => {
     c.rows = new Map();
@@ -334,7 +339,7 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
       const row = document.createElement('div');
       row.className = `row ${a.g}`;
       row.innerHTML = `<div class="name"><a href="${a.url}">${esc(a.name)}</a></div>
-        <div class="opens">…</div><div class="bar"><i></i></div><div class="meta"></div>`;
+        <div class="opens">…</div><div class="bar"><i></i></div><div class="meta"></div>${c.subs && a.subs ? '<div class="subs"></div>' : ''}`;
       c.rows.set(a, row);
       c.list.appendChild(row);
     });
@@ -365,6 +370,14 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
         c.list.appendChild(row);   // re-append in sorted order
       });
       if (c.tot.id === 'totOpens') c.tot.textContent = fmt(sum);
+    });
+    // v1.10: email subscribers (distinct confirmed addresses with pings on), from the app's own count-only endpoint
+    APPS.filter(a => a.subs).forEach(a => {
+      const el = CARDS[1].rows.get(a).querySelector('.subs');
+      fetch(a.subs, { cache: 'no-store' }).then(r => r.ok ? r.json() : null)
+        .then(d => { if (d && typeof d.subscribers === 'number')
+          el.innerHTML = `✉ <b>${fmt(d.subscribers)}</b> email subscriber${d.subscribers === 1 ? '' : 's'} to pings`; })
+        .catch(() => {});
     });
     // Visitors header: unique across all apps, from the shared Tally counter every app also hits (footer v1.12).
     fetch(tally('ggp-all'), { cache: 'no-store' })
@@ -405,10 +418,15 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
     ['days-flight-schedule', "Day's Flight Schedule", '#3fa7a0'],
     ['fuel-to-add', 'How Much Fuel to Add?', '#3fa7a0'],
     ['airfield-kml-builder', 'Mexican Airstrips for your EFB and Sim', '#3fa7a0'],
+    ['emergency-airstrips-mexico', 'Planning Emergency Airstrips in Mexico', '#3fa7a0'],   // v1.10: was missing here
   ];
+  // v1.10: email subscribers to Tracking Piston GA Accidents' pings. A level (count at each nightly reading), not a
+  // daily increase, so Opens / New visitors don't apply to it. History key written by the daily service check.
+  const SUBS = 'tga-subs';
   const $ = id => document.getElementById(id);
   const sel = $('histApp'), chart = $('histChart'), table = $('histTable');
-  sel.innerHTML = '<option value="">All apps</option>' + APPS.map(([k, n]) => `<option value="${k}">${n.replace(/&/g, '&amp;')}</option>`).join('');
+  sel.innerHTML = '<option value="">All apps</option>' + APPS.map(([k, n]) => `<option value="${k}">${n.replace(/&/g, '&amp;')}</option>`).join('')
+    + `<option value="${SUBS}">Tracking Piston GA Accidents: email subscribers</option>`;
   let rows = [], measure = 0;
 
   const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -430,6 +448,7 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
   }
   function inc(i) {
     const k = sel.value;
+    if (k === SUBS) return rows[i].c[SUBS] ? rows[i].c[SUBS][0] : undefined;   // level at this reading
     if (k) return rows[i].c[k] || rows[i - 1].c[k] ? delta(i, k) : undefined;   // undefined: app not launched yet
     if (measure === 1) return delta(i, 'ggp-all');   // unique across all apps
     // v1.4: sum each app's own increase (was: total of all apps, blank whenever any app was missing from a reading)
@@ -447,25 +466,29 @@ body{margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:c
       const v = inc(i); if (v === undefined) continue;
       const day = dayOf(rows[i].t), hrs = (rows[i].t - rows[i - 1].t) / 3600e3, prev = out[out.length - 1];
       if (prev && prev.day === day) {   // v1.4: two readings closing the same day make one bar
-        prev.v = prev.v == null || v == null ? null : prev.v + v; prev.to = rows[i].t; prev.hrs += hrs;
+        prev.v = sel.value === SUBS ? v : prev.v == null || v == null ? null : prev.v + v; prev.to = rows[i].t; prev.hrs += hrs;
       } else out.push({ day, from: rows[i - 1].t, to: rows[i].t, hrs, v, launch: !!sel.value && first[sel.value] === i });
     }
-    out.forEach(b => { b.part = b.hrs < 20 || b.launch; b.multi = b.hrs > 30; });   // launch day: app was live part of it
+    out.forEach(b => { b.part = sel.value !== SUBS && (b.hrs < 20 || b.launch); b.multi = sel.value !== SUBS && b.hrs > 30; });   // launch day: app was live part of it
     return out;
   }
 
   function draw() {
     const color = (APPS.find(a => a[0] === sel.value) || [, , '#f5a623'])[2];
-    const B = bars(), what = measure ? 'new visitors' : 'opens';
+    const subs = sel.value === SUBS;
+    document.querySelector('.seg').style.visibility = subs ? 'hidden' : '';
+    const B = bars(), what = subs ? 'email subscribers' : measure ? 'new visitors' : 'opens';
     if (!B.length) {
-      chart.innerHTML = `<div class="hist-empty">History starts ${rows.length ? dayOf(rows[0].t) : '12-Nov-2026'}. The first bar appears after the next nightly reading.</div>`;
+      chart.innerHTML = `<div class="hist-empty">${subs ? 'Subscriber history starts with the nightly reading after 27-Nov-2026.' : `History starts ${rows.length ? dayOf(rows[0].t) : '12-Nov-2026'}. The first bar appears after the next nightly reading.`}</div>`;
       $('histSum').textContent = ''; table.innerHTML = ''; $('histRange').textContent = '';
       return;
     }
     $('histRange').textContent = `${B[0].day} to ${B[B.length - 1].day}`;
     const known = B.filter(b => b.v != null), total = known.reduce((s, b) => s + b.v, 0);
     const full = known.filter(b => !b.part), fullDays = full.reduce((s, b) => s + Math.max(1, Math.round(b.hrs / 24)), 0);
-    $('histSum').innerHTML = `<b>${total.toLocaleString()}</b> ${what} since ${B[0].day}` +
+    const last = known[known.length - 1];
+    $('histSum').innerHTML = subs ? (last ? `<b>${last.v.toLocaleString()}</b> ${what} at the ${last.day} reading` : '') :
+      `<b>${total.toLocaleString()}</b> ${what} since ${B[0].day}` +
       (fullDays ? `, <b>${Math.round(full.reduce((s, b) => s + b.v, 0) / fullDays).toLocaleString()}</b> a day` : '');
 
     const W = Math.max(300, chart.clientWidth), H = 220, L = 34, R = 4, T = 10, Bm = 22;

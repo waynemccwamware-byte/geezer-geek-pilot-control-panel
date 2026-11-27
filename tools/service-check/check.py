@@ -110,6 +110,14 @@ def main(argv):
         add('Tally counters', key, ok, f"{d['visit']} opens, {d['visitor']} visitors" if ok else f'HTTP {status}')
 
     # 3. the apps' own Netlify functions
+    # 27-Nov-2026: Tracking Piston GA Accidents' email-subscriber count (a number only), also kept in the history
+    status, d = get_json('https://tracking-piston-ga-accidents.netlify.app/.netlify/functions/api?op=subscribers')
+    ok = bool(d) and isinstance(d.get('subscribers'), int)
+    if ok:
+        snapshot['tga-subs'] = [d['subscribers'], d['subscribers']]
+    add('App functions', 'Tracking Piston GA Accidents (api: email subscriber count)', ok,
+        f"{d['subscribers']} email subscribers" if ok else f'HTTP {status}')
+
     status, d = get_json('https://tec-route-lookup.netlify.app/.netlify/functions/tec-lookup?action=destinations&origin=SBA')
     ok = bool(d) and len(d.get('destinations') or []) > 5
     detail = f'HTTP {status}'
@@ -189,7 +197,8 @@ def main(argv):
         except (OSError, ValueError):
             hist = {'rows': []}
         hist['about'] = ('Daily Tally readings for the GeezerGeek Pilot apps: c[key] = [opens, visitors], raw Tally '
-                         'values (no pre-Tally bases). Written by tools/service-check/check.py on the main branch.')
+                         'values (no pre-Tally bases); c["tga-subs"] = [email subscribers, same] for Tracking Piston '
+                         'GA Accidents (a level, not a counter). Written by tools/service-check/check.py on the main branch.')
         if snapshot:
             hist['rows'].append({'t': dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%MZ'), 'c': snapshot})
         with open(path, 'w') as f:
